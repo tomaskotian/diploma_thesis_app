@@ -3,3 +3,5 @@ build/
 dist/
 *.spec
 notes.txt
+logs/
+__pycache__/
