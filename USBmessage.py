@@ -49,11 +49,12 @@ class Message_rx:
 
 class Serial_comunication:
     def __init__(self):
-        self.ports = self.get_ports()
+        self.ports_dict = self.get_ports()
 
     def get_ports(self):
-        try:
-            return serial.tools.list_ports.comports()
+        try:       
+            com_ports = serial.tools.list_ports.comports()
+            return {com.name: com.serial_number for com in com_ports}
         except Exception as e:
             logging.error(e)
 

@@ -29,28 +29,8 @@ class WebcamApp:
 
             self.window.after(15,self.update_webcam)
 
-class Usb:
-    def __init__(self):
-        self.devices = None
+root = tk.Tk()
 
-    def print_devices(self):
-        ports = serial.tools.list_ports.comports()
-        for port in ports:
-            # Check if the port is a USB serial port
-            if "USB" in port.description:
-                print("Port:", port.device)
-                print("  - Description:", port.description)
-                print("  - Hardware ID:", port.hwid)
-                print("  - Manufacturer:", port.manufacturer)
-                print("  - Product:", port.product)
-                print("  - Serial Number:", port.serial_number)
-                print()
+app = WebcamApp(root)
 
-usb_con = Usb()
-usb_con.print_devices()
-
-# root = tk.Tk()
-
-# app = WebcamApp(root)
-
-# root.mainloop()
+root.mainloop()

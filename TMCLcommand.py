@@ -1,8 +1,14 @@
 import USBmessage as usb
 
 class TMCLcmd:
-    def __init__(self,ser:usb.Serial_comunication):
-        self.ser = ser
+    def __init__(self):
+        self.ser = usb.Serial_comunication()
+
+    def connect(self,port:str,baudrate:int):
+        self.ser.connect(port,baudrate)
+
+    def get_ports(self) -> dict:
+        return self.ser.ports_dict
 
     def motor_stop(self,motor:int):
         self.ser.send(usb.Message_tx(1,3,0,motor,0))
@@ -34,7 +40,7 @@ class TMCLcmd:
     def set_output(self,port_number:int, bank:int, value_32b:int):
         self.ser.send(usb.Message_tx(1,14,port_number, bank, value_32b))
 
-# com = TMCLcmd(usb.Serial_comunication())
+# com = TMCLcmd()
 # com.ser.connect("COM8",9600)
 
 # com.set_param(4,0,69)
