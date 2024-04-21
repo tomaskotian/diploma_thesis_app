@@ -9,7 +9,8 @@ def _get_logfile_name():
     return f"logs/log_{today_date}.log"
 
 logging.basicConfig(filename=_get_logfile_name(),format='%(asctime)s %(levelname)s - %(name)s - %(funcName)s - %(message)s',level=logging.INFO)
-    
+logging.disable()
+
 class Message_tx:
     def __init__(self, address:bytes, cmd_n:bytes, type_n:bytes, motor_bank:bytes, value_32b:int):
         self.address    = address
@@ -22,7 +23,8 @@ class Message_tx:
         self.tmcl_cmd = self.get_cmd()
     
     def checksum(self):
-        return sum([self.address, self.cmd_n, self.type_n, self.motor_bank, self.value_32b]) & 0xFF
+        value_sum = sum(list(self.value_32b.to_bytes(4,"big",signed=True)))
+        return sum([self.address, self.cmd_n, self.type_n, self.motor_bank, value_sum]) & 0xFF
     
     def get_cmd(self):
         bytes_list = [self.address,self.cmd_n,self.type_n,self.motor_bank] 
@@ -31,10 +33,7 @@ class Message_tx:
         return bytes_list
 
     def to_list(self):
-        bytes_list = []
-        for i in range(4):
-            bytes_list.append(self.value_32b & (0xFF << (i * 8)))
-        return bytes_list[::-1]
+        return list(self.value_32b.to_bytes(4,"big",signed=True))
     
 class Message_rx:
     def __init__(self, message:list[int]):
@@ -42,7 +41,7 @@ class Message_rx:
         self.module    = message[1]
         self.status    = message[2]
         self.cmd_n     = message[3]
-        self.value_32b = message[4] + message[5] + message[6] + message[7] 
+        self.value_32b = int.from_bytes(bytes(message[4:8]),byteorder='big',signed=True) 
         self.check_sum = message[8]
 
         self.tmcl_cmd = message
@@ -118,3 +117,6 @@ class Serial_comunication:
 # print(ser.read().tmcl_cmd)
 # ser.send(Message_tx(1,5,4,0,50))
 # print(ser.read().tmcl_cmd)
+
+# Message_tx(1,1,4,5,-1000)
+Message_rx([1,1,4,5,255,255,0xfc,0x18,0x1d])

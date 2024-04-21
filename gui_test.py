@@ -203,11 +203,9 @@ class Gui(tk.Tk):
         pass
 
     def stop_tmcm(self):
-        #call commad to stop 
-        print("tmcm stop")
+        print("motors stop")
         for i in range(6):
             self.tmcm.motor_stop(i)
-        pass
         
     def find_available_cameras(self):
         available_cameras = []
