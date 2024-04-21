@@ -1,10 +1,12 @@
 import USBmessage as usb
+import time
 
 class TMCLcmd:
     def __init__(self):
         self.erros_list = []
-        self.blocked = False
+        self.blocked = False #for block all commands
         self.unit = "mm"
+        self.actual_positions = [0,0,0,0,0,0]
 
         self.ser = usb.Serial_comunication()
         self.autoconnect()
@@ -30,10 +32,14 @@ class TMCLcmd:
         return self.ser.ports_dict
 
     def motor_stop(self,motor:int):
+        if(self.ignore_cmd(motor=motor)):
+            return
         self.ser.send(usb.Message_tx(1,3,0,motor,0))
     
     def move_to_abs(self,motor:int,position:int):
-        self.ser.send(usb.Message_tx(1,4,0,motor,self._distance2steps(position)))
+        if(self.ignore_cmd(motor=motor)):
+            return
+        self.ser.send(usb.Message_tx(1,4,0,motor,self._distance2steps(motor=motor,position=position)))
     
     def _distance2steps(self,motor,position):
         pitch = 5
@@ -41,9 +47,9 @@ class TMCLcmd:
             pitch = 10
 
         if(self.unit == "mm"):
-            distance_step = int(pitch/50000)
+            distance_step = pitch/50000
         elif(self.unit == "um"):
-            distance_step = int((pitch*1000)/50000)
+            distance_step = (pitch*1000)/50000
 
         if(motor == 4):
             # motor 4  270deg = 393750 steps 1deg  = 1458.33 steps
@@ -53,10 +59,25 @@ class TMCLcmd:
             return int(position * 10937.5)
         else:
             # for all others motors 0-3
-            return int(position * distance_step)
+            return int(position / distance_step)
 
-    def _steps2distance(self):
-        pass
+    def _steps2distance(self,motor,steps):
+        pitch = 5
+        if(motor == 3):
+            pitch = 10
+        
+        distance_step = (pitch*1000)/50000
+
+        if(motor == 4):
+            # motor 4  270deg = 393750 steps 1deg  = 1458.33 steps
+            return int(steps / 1458.33)
+        elif(motor == 5):
+            # motor 5 rotation small gear 525000 steps 270deg = 2953125 steps 1 deg = 10937.5 step
+            return int(steps / 10937.5)
+        else:
+            # for all others motors 0-3
+            return int(steps * distance_step)
+        
 
     def set_param(self,type_n:int, motor:int, value_32b:int):
         self.ser.send(usb.Message_tx(1,5,type_n, motor, value_32b))
@@ -87,6 +108,9 @@ class TMCLcmd:
     def set_output(self,port_number:int, bank:int, value_32b:int):
         self.ser.send(usb.Message_tx(1,14,port_number, bank, value_32b))
 
+    def reach_flag(self,motor:int):
+        self.ser.send(usb.Message_tx(1,6,8,motor,0))   
+
     def _set_block(self):
         if(len(self.erros_list)):
             self.blocked = True
@@ -105,7 +129,7 @@ class TMCLcmd:
             self.set_param(type_n=153,motor=motor,value_32b=7)      # ramp divisor 
             self.set_param(type_n=154,motor=motor,value_32b=2)      # pulse divisor 
             self.set_param(type_n=193,motor=motor,value_32b=1)      # reference search mode
-            self.set_param(type_n=194,motor=motor,value_32b=1500)   # reference search speed
+            self.set_param(type_n=194,motor=motor,value_32b=100)   # reference search speed 1500
             self.set_param(type_n=195,motor=motor,value_32b=100)    # reference search switch speed
             self.set_param(type_n=214,motor=motor,value_32b=10)     # delay after command in 10ms
             
@@ -126,20 +150,35 @@ class TMCLcmd:
         self._set_block()
         self._print_eerors()
         self.erros_list.clear()
+
+    def find_all_references(self):
+        for motor in range(6):
+            self.ref_search(type_n=0,motor=motor)
+
+    def get_actual_positions(self):
+        for motor in range(6):
+            self.get_param(type_n=1,motor=motor) #actual position
+            self.actual_positions[motor] = self._steps2distance(motor=motor,steps=self.ser.reply.value_32b) 
+    
+    def ignore_cmd(self,motor):
+        self.ref_search(type_n=2,motor=motor) 
+        print(self.ser.reply.value_32b)
+        if(self.ser.reply.value_32b != 0): # status if 0 finished search
+            return True
         
-
-
-
+        self.reach_flag(motor=motor) # status if 1 reached position
+        if(self.ser.reply.value_32b != 1):
+            return True
+        
+        return False
+        
 com = TMCLcmd()
+com.find_all_references()
 
-
-#functions to find reference
-# com.ref_search(type_n=0,motor=0)
-# com.ref_search(type_n=0,motor=1)
-# com.ref_search(type_n=0,motor=2)
-# com.ref_search(type_n=0,motor=3)
-# com.ref_search(type_n=0,motor=4)  
-# com.ref_search(type_n=0,motor=5)  
+for i in range(10):
+    com.get_actual_positions()
+    print(com.actual_positions)
+    time.sleep(1)
 
 
 

@@ -50,6 +50,7 @@ class Serial_comunication:
     def __init__(self):
         self.ports_dict = self.get_ports()
         self.error = {}
+        self.reply = Message_rx([0,0,0,0,0,0,0,0,0])
 
     def get_ports(self):
         try:       
@@ -68,24 +69,22 @@ class Serial_comunication:
     def send(self, message:Message_tx):
         self.error.clear()
         try:
+            print(message.tmcl_cmd)
             self.ser.write(bytes(message.tmcl_cmd))
-            reply = self.read()
-            if(self.is_reply_error(message,reply)):
-                self.error[str(message.tmcl_cmd)] = str(reply.tmcl_cmd)
-        except Exception as e:
-            print(f"Could not send command {message.tmcl_cmd}")
-            logging.error(e)
+            self.reply = self.read()
+            if(self.is_reply_error(message,self.reply)):
+                self.error[str(message.tmcl_cmd)] = str(self.reply.tmcl_cmd)
+        except:
+            self.error["Send/read"] = "Could not send or read message"
 
     def read(self) -> Message_rx:
         try:
             if(self.ser.readable()):
                 read_message = list(self.ser.read(9))
-                print(f"Read reply {read_message}")
                 logging.info(f"RX TMCL reply: {read_message}")
                 return Message_rx(read_message)
             return Message_rx([])
         except Exception as e:
-            print(f"Could not read reply {read_message}")
             logging.error(e)
 
     status_code = { 100:  "OK",
@@ -105,7 +104,6 @@ class Serial_comunication:
                 logging.error(self.status_code[message_rx.status])
             except Exception as e:
                 logging.error(e)
-            print(f"Reply error {message_rx.tmcl_cmd}")
             return True
         
     if(DEBUG):
