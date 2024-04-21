@@ -49,6 +49,7 @@ class Message_rx:
 class Serial_comunication:
     def __init__(self):
         self.ports_dict = self.get_ports()
+        self.error = {}
 
     def get_ports(self):
         try:       
@@ -61,24 +62,30 @@ class Serial_comunication:
         try:
             self.ser = serial.Serial(port=port, baudrate=baudrate)
         except Exception as e:
+            print(f"Could not connect to port {port}")
             logging.error(e)
 
     def send(self, message:Message_tx):
+        self.error.clear()
         try:
             self.ser.write(bytes(message.tmcl_cmd))
-            logging.info(f"TX TMCL cmd: {message.tmcl_cmd}")
-            self.check_reply(message,self.read())
+            reply = self.read()
+            if(self.is_reply_error(message,reply)):
+                self.error[str(message.tmcl_cmd)] = str(reply.tmcl_cmd)
         except Exception as e:
+            print(f"Could not send command {message.tmcl_cmd}")
             logging.error(e)
 
     def read(self) -> Message_rx:
         try:
             if(self.ser.readable()):
                 read_message = list(self.ser.read(9))
+                print(f"Read reply {read_message}")
                 logging.info(f"RX TMCL reply: {read_message}")
                 return Message_rx(read_message)
             return Message_rx([])
         except Exception as e:
+            print(f"Could not read reply {read_message}")
             logging.error(e)
 
     status_code = { 100:  "OK",
@@ -90,18 +97,17 @@ class Serial_comunication:
                     5  :  "Configuration EEPROM locked",
                     6  :  "Command not available"}       
     
-    def check_reply(self,message_tx:Message_tx, message_rx:Message_rx):
+    def is_reply_error(self,message_tx:Message_tx, message_rx:Message_rx):
         if(message_rx.status == 100 and message_rx.cmd_n == message_tx.cmd_n):
-            return True
+            return False
         else:
             try:
                 logging.error(self.status_code[message_rx.status])
             except Exception as e:
                 logging.error(e)
-            return False
-
-  
-    
+            print(f"Reply error {message_rx.tmcl_cmd}")
+            return True
+        
     if(DEBUG):
         def print_usb_devices(self):
             ports = serial.tools.list_ports.comports()
@@ -117,6 +123,3 @@ class Serial_comunication:
 # print(ser.read().tmcl_cmd)
 # ser.send(Message_tx(1,5,4,0,50))
 # print(ser.read().tmcl_cmd)
-
-# Message_tx(1,1,4,5,-1000)
-Message_rx([1,1,4,5,255,255,0xfc,0x18,0x1d])

@@ -17,7 +17,7 @@ Commands TMCL
 MST 3
 MVP 4
 SAP 5
-    GAP 6
+GAP 6
 RFS 13
 SIO 14
-    GCO 31
+GCO 31
