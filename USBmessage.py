@@ -69,7 +69,7 @@ class Serial_comunication:
     def send(self, message:Message_tx):
         self.error.clear()
         try:
-            print(message.tmcl_cmd)
+            # print(message.tmcl_cmd)
             self.ser.write(bytes(message.tmcl_cmd))
             self.reply = self.read()
             if(self.is_reply_error(message,self.reply)):

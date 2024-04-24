@@ -7,19 +7,19 @@ class TMCLcmd:
         self.blocked = False #for block all commands
         self.unit = "mm"
         self.actual_positions = [0,0,0,0,0,0]
+        self.connection = None
 
         self.ser = usb.Serial_comunication()
-        self.autoconnect()
+        self.__autoconnect()
 
-    def autoconnect(self):
-        connection_flag = False
+    def __autoconnect(self):
         for port in self.ser.ports_dict.keys():
             if(self.ser.ports_dict[port] == 'TMCSTEP'):
                 self.ser.connect(port=port,baudrate=9600)
-                connection_flag = True
+                self.connection = f"{port}: TMCSTEP"
                 break
         
-        if(not(connection_flag)):
+        if(self.connection == None):
             print("Autoconnect cannot found TMCM-6110")
             return
         self.set_motor_parametres()
@@ -32,8 +32,6 @@ class TMCLcmd:
         return self.ser.ports_dict
 
     def motor_stop(self,motor:int):
-        if(self.ignore_cmd(motor=motor)):
-            return
         self.ser.send(usb.Message_tx(1,3,0,motor,0))
     
     def move_to_abs(self,motor:int,position:int):
@@ -46,14 +44,16 @@ class TMCLcmd:
         if(motor == 3):
             pitch = 10
 
-        if(self.unit == "mm"):
-            distance_step = pitch/50000
-        elif(self.unit == "um"):
-            distance_step = (pitch*1000)/50000
+        # if(self.unit == "mm"):
+        #     distance_step = pitch/50000
+        # elif(self.unit == "um"):
+        #     distance_step = (pitch*1000)/50000
+        distance_step = (pitch*1000)/50000
+
 
         if(motor == 4):
             # motor 4  270deg = 393750 steps 1deg  = 1458.33 steps
-            return int(position * 1458.33)
+            return int(((position-0.65) * 55.1) * 1458.33)
         elif(motor == 5):
             # motor 5 rotation small gear 525000 steps 270deg = 2953125 steps 1 deg = 10937.5 step
             return int(position * 10937.5)
@@ -129,7 +129,7 @@ class TMCLcmd:
             self.set_param(type_n=153,motor=motor,value_32b=7)      # ramp divisor 
             self.set_param(type_n=154,motor=motor,value_32b=2)      # pulse divisor 
             self.set_param(type_n=193,motor=motor,value_32b=1)      # reference search mode
-            self.set_param(type_n=194,motor=motor,value_32b=100)   # reference search speed 1500
+            self.set_param(type_n=194,motor=motor,value_32b=1000)   # reference search speed 
             self.set_param(type_n=195,motor=motor,value_32b=100)    # reference search switch speed
             self.set_param(type_n=214,motor=motor,value_32b=10)     # delay after command in 10ms
             
@@ -162,7 +162,7 @@ class TMCLcmd:
     
     def ignore_cmd(self,motor):
         self.ref_search(type_n=2,motor=motor) 
-        print(self.ser.reply.value_32b)
+        # print(self.ser.reply.value_32b)
         if(self.ser.reply.value_32b != 0): # status if 0 finished search
             return True
         
@@ -172,13 +172,13 @@ class TMCLcmd:
         
         return False
         
-com = TMCLcmd()
-com.find_all_references()
+# com = TMCLcmd()
+# com.find_all_references()
 
-for i in range(10):
-    com.get_actual_positions()
-    print(com.actual_positions)
-    time.sleep(1)
+# for i in range(10):
+#     com.get_actual_positions()
+#     print(com.actual_positions)
+#     time.sleep(1)
 
 
 
