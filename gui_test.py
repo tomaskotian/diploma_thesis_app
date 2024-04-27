@@ -3,16 +3,29 @@ from tkinter import scrolledtext
 import cv2
 from PIL import Image,ImageTk
 import TMCLcommand as tmc
+import time
 
 
 class Gui(tk.Tk):
     def __init__(self):
         super().__init__()
 
+        self.magnification_deg = {0.7:0, 0.8:13, 0.9:27, 1:40, 1.1:48, 1.2:56, 1.3:64, 1.4:72, 
+                                  1.5:80, 1.6:84, 1.7:88, 1.8:92, 1.9:96,
+                                  2:100, 2.1:106, 2.2:112, 2.3:118, 2.4:124, 
+                                  2.5:130, 2.6:134, 2.7:138, 2.8:152, 2.9:156,
+                                  3:150, 3.1:156, 3.2:162, 3.3:168, 3.4:174, 
+                                  3.5:180, 3.6:184, 3.7:188, 3.8:192, 3.9:196,
+                                  4:200, 4.1:206, 4.2:212, 4.3:218, 4.4:224, 
+                                  4.5:230, 4.6:234, 4.7:238, 4.8:242, 4.9:246,
+                                  5:250, 5.1:255, 5.2:260, 5.3:265, 5.4:270, 5.5:275, 5.6:280}
+        self.focus_distance = {0.7:0, 1:40, 1.5:80, 2:100, 2.5:130, 3:150, 3.5:180, 4:200, 4.5:230, 5:250, 5.6:280}
         self.positions = []
+        self.led_intensity_target = 0
+        self.led_intensity_var = 0 
         self.unit = "mm"
         self.tmcm = tmc.TMCLcmd()
-        tmcm_ports = [f"{com}: {self.tmcm.get_ports()[com]}" for com in self.tmcm.get_ports().keys()]
+        self.tmcm_ports = [f"{com}: {self.tmcm.get_ports()[com]}" for com in self.tmcm.get_ports().keys()]
 
         cam_ports = self.find_available_cameras()
 
@@ -36,7 +49,7 @@ class Gui(tk.Tk):
         self.downbar_frame.grid(row=1,column=1,rowspan=1,sticky="nsew")
 
         self.var_tmcm = tk.StringVar(self.sidebar_frame,self.tmcm.connection)
-        self.tmcm_options = tk.OptionMenu(self.sidebar_frame,self.var_tmcm,*tmcm_ports,command=self.connect_tmcm)
+        self.tmcm_options = tk.OptionMenu(self.sidebar_frame,self.var_tmcm,*self.tmcm_ports,command=self.connect_tmcm)
         self.tmcm_options.config(width=10)
         self.tmcm_options.grid(row=0,column=0,padx=5)
 
@@ -97,14 +110,20 @@ class Gui(tk.Tk):
         self.led_frame.grid(row=3,column=0,columnspan=2,sticky="nsew",pady=10)
 
         self.led_label = tk.Label(self.led_frame,text="Led intensity")
-        self.led_label.grid(row=0,column=0,columnspan=2,sticky="nsew")
+        self.led_label.grid(row=0,column=0,sticky="nsew")
+
+        self.intesity_led_var = tk.IntVar(self.led_frame)
+        self.led_bar = tk.Scale(self.led_frame,variable=self.intesity_led_var, from_=0, to=100,resolution=4,length=300, orient=tk.HORIZONTAL)
+        self.led_bar.grid(row=1,column=0,columnspan=2)
         
         self.led_var = tk.IntVar(self.led_frame,0)
         self.led_button = tk.Button(self.led_frame,text="intensity++",width=10,command=self.led_intensity_plus)
-        self.led_button.grid(row=1,column=0)
-
-        self.led_auto = tk.Checkbutton(self.led_frame,text="Automatic")
-        self.led_auto.grid(row=1,column=1,padx=5)
+        # self.led_button.grid(row=1,column=0)
+        
+        self.led_auto_var = tk.BooleanVar(self.led_frame,True)
+        self.led_auto = tk.Checkbutton(self.led_frame,text="Automatic",variable=self.led_auto_var)
+        self.led_auto.grid(row=0,column=1,padx=5)
+        self.led_auto.select()
 
         self.camera_setting_frame = tk.Frame(self.sidebar_frame,bg="yellow")
         self.camera_setting_frame.grid(row=4,column=0,columnspan=2,sticky="nsew")
@@ -128,7 +147,8 @@ class Gui(tk.Tk):
         self.camera_canvas = tk.Canvas(self.camera_setting_frame,width=50,height=50)
         self.camera_canvas.grid(row=2,column=1,rowspan=2)
 
-        self.camera_auto = tk.Checkbutton(self.camera_setting_frame,text="Automatic focus")
+        self.camera_focus_var = tk.BooleanVar(self.camera_setting_frame,value=True)
+        self.camera_auto = tk.Checkbutton(self.camera_setting_frame,text="Automatic focus",variable=self.camera_focus_var)
         self.camera_auto.grid(row=2,column=2,rowspan=2,padx=5)
 
         self.step_frame = tk.Frame(self.sidebar_frame,bg="red")
@@ -182,11 +202,11 @@ class Gui(tk.Tk):
         self.probe_down.grid(row=3,column=3)
 
         self.function_home = tk.Button(self.downbar_frame,width=15,height=2,text="Home",command=self.find_home).grid(column=0,row=0)
-        self.function_center = tk.Button(self.downbar_frame,width=15,height=2,text="Center").grid(column=1,row=0)
-        self.function_rotate = tk.Button(self.downbar_frame,width=15,height=2,text="Auto rotate").grid(column=1,row=0)
-        self.function_find_obj = tk.Button(self.downbar_frame,width=15,height=2,text="Find object").grid(column=2,row=0)
-        self.function_center_obj = tk.Button(self.downbar_frame,width=15,height=2,text="Center object").grid(column=3,row=0)
-        self.function_click_move = tk.Button(self.downbar_frame,width=15,height=2,text="Click and move").grid(column=4,row=0)
+        self.function_center = tk.Button(self.downbar_frame,width=15,height=2,text="Center",command=self.find_center).grid(column=1,row=0)
+        self.function_rotate = tk.Button(self.downbar_frame,width=15,height=2,text="Auto rotate").grid(column=2,row=0)
+        self.function_find_obj = tk.Button(self.downbar_frame,width=15,height=2,text="Find object").grid(column=3,row=0)
+        self.function_center_obj = tk.Button(self.downbar_frame,width=15,height=2,text="Center object").grid(column=4,row=0)
+        self.function_click_move = tk.Button(self.downbar_frame,width=15,height=2,text="Click and move").grid(column=5,row=0)
 
         self.messages = scrolledtext.ScrolledText(self.downbar_frame,wrap=tk.WORD,width=100,height=10)
         self.messages.bind('<Key>',lambda e: "break")
@@ -203,6 +223,71 @@ class Gui(tk.Tk):
         
         self.update_positon()
         self.timer_100ms()
+        self.timer_20ms()
+
+    def led_intesity_0(self):
+        # self.led_intensity_var = 0
+        self.led_0_percent.select()
+        self.led_25_percent.deselect()
+        self.led_50_percent.deselect()
+        self.led_75_percent.deselect()
+        self.led_100_percent.deselect()
+        self.led_intensity_target = 0
+    
+    def led_intesity_25(self):
+        # self.led_intensity_var = 0
+        self.led_0_percent.deselect()
+        self.led_25_percent.select()
+        self.led_50_percent.deselect()
+        self.led_75_percent.deselect()
+        self.led_100_percent.deselect()
+        self.led_intensity_target = 6
+
+    def led_intesity_50(self):
+        # self.led_intensity_var = 0
+        self.led_0_percent.deselect()
+        self.led_25_percent.deselect()
+        self.led_50_percent.select()
+        self.led_75_percent.deselect()
+        self.led_100_percent.deselect()
+        self.led_intensity_target = 12
+
+    def led_intesity_75(self):
+        # self.led_intensity_var = 0
+        self.led_0_percent.deselect()
+        self.led_25_percent.deselect()
+        self.led_50_percent.deselect()
+        self.led_75_percent.select()
+        self.led_100_percent.deselect()
+        self.led_intensity_target = 18
+
+    def led_intesity_100(self):
+        # self.led_intensity_var = 0
+        self.led_0_percent.deselect()
+        self.led_25_percent.deselect()
+        self.led_50_percent.deselect()
+        self.led_75_percent.deselect()
+        self.led_100_percent.select()
+        self.led_intensity_target = 25
+
+    def timer_20ms(self):
+        if(self.led_auto_var.get()):
+            target = int(20/4)
+        else:
+            target = int(self.intesity_led_var.get()/4)
+        self.tmcm.set_output(3,2,0)
+        time.sleep(0.005)
+        if(self.led_intensity_var != target):
+            self.tmcm.set_output(3,2,1)
+            self.led_intensity_var += 1
+            if(self.led_intensity_var >=26):
+                self.led_intensity_var = 0
+
+        self.after(15,self.timer_20ms)    
+
+    def find_center(self):
+        self.tmcm.move_to_abs(0,41300)
+        self.tmcm.move_to_abs(1,48800)
 
     def set_step_um(self):
         self.tmcm.unit = "um"
@@ -214,8 +299,12 @@ class Gui(tk.Tk):
         self.unit = "mm"
         self.step_um.deselect()
 
+    
     def timer_100ms(self):
-        self.tmcm.move_to_abs(4,self.camera_mag_var.get())
+        target = self.magnification_deg[self.camera_mag_var.get()]
+        self.tmcm.move_to_abs(4,target)
+        if(self.camera_focus_var.get()):
+            self.tmcm.move_to_abs(2,self.calculate_camera_position())
         self.after(1000,self.timer_100ms)
 
     def move_x_plus(self):
@@ -224,8 +313,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[0] + self.step_var.get()
         print(f"target; {target}")
-
-        self.tmcm.move_to_abs(0,target)
+        if(self.is_target_reachable(0,target)):
+            self.tmcm.move_to_abs(0,target)
     
     def move_x_minus(self):
         if(self.unit == "mm"):
@@ -233,8 +322,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[0] - self.step_var.get()
         print(f"target; {target}")
-
-        self.tmcm.move_to_abs(0,target)
+        if(self.is_target_reachable(0,target)):
+            self.tmcm.move_to_abs(0,target)
 
     def move_y_plus(self):
         if(self.unit == "mm"):
@@ -242,8 +331,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[1] + self.step_var.get()
         print(f"target; {target}")
-
-        self.tmcm.move_to_abs(1,target)
+        if(self.is_target_reachable(1,target)):
+            self.tmcm.move_to_abs(1,target)
     
     def move_y_minus(self):
         if(self.unit == "mm"):
@@ -251,8 +340,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[1] - self.step_var.get()
         print(f"target; {target}")
-
-        self.tmcm.move_to_abs(1,target)
+        if(self.is_target_reachable(1,target)):
+            self.tmcm.move_to_abs(1,target)
 
     def move_probe_up(self):
         if(self.unit == "mm"):
@@ -260,8 +349,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[3] - self.step_var.get()
         print(f"target; {target}")
-
-        self.tmcm.move_to_abs(3,target)
+        if(self.is_target_reachable(3,target)):
+            self.tmcm.move_to_abs(3,target)
 
     def move_probe_down(self):
         if(self.unit == "mm"):
@@ -269,8 +358,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[3] + self.step_var.get()
         print(f"target; {target}")
-
-        self.tmcm.move_to_abs(3,target)
+        if(self.is_target_reachable(3,target)):
+            self.tmcm.move_to_abs(3,target)
 
 
     def rotate_left(self):
@@ -279,8 +368,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[5] - self.step_var.get()
         print(f"target; {target}")
-
-        self.tmcm.move_to_abs(5,target)
+        if(self.is_target_reachable(5,target)):
+            self.tmcm.move_to_abs(5,target)
 
     def rotate_right(self):
         if(self.unit == "mm"):
@@ -288,7 +377,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[5] + self.step_var.get()
         print(f"target; {target}")
-        self.tmcm.move_to_abs(5,target)
+        if(self.is_target_reachable(5,target)):
+            self.tmcm.move_to_abs(5,target)
 
     def move_camera_down(self):
         if(self.unit == "mm"):
@@ -296,8 +386,8 @@ class Gui(tk.Tk):
         else:
             target = self.positions[2] + self.step_var.get()
         print(f"target; {target}")
-        self.tmcm.move_to_abs(2,target)
-
+        if(self.is_target_reachable(2,target)):
+            self.tmcm.move_to_abs(2,target)
 
     def move_camera_up(self):
         if(self.unit == "mm"):
@@ -305,9 +395,29 @@ class Gui(tk.Tk):
         else:
             target = self.positions[2] - self.step_var.get()
         print(f"target; {target}")
-        self.tmcm.move_to_abs(2,target)
+        if(self.is_target_reachable(2,target)):
+            self.tmcm.move_to_abs(2,target)
 
+    def calculate_camera_position(self): 
+        magnification = self.camera_mag_var.get()
+        if(magnification == 5.6):
+            focus_distance = 44700   
+        elif(magnification >= 5):
+            focus_distance = 44600
+        elif(magnification >= 4):
+            focus_distance = 44500
+        elif(magnification >= 3):
+            focus_distance = 44000 + int(500*(magnification-3))
+        elif(magnification >= 2):
+            focus_distance = 43000 + int(1000*(magnification-2))
+        elif(magnification >= 1.5):
+            focus_distance = 42000 + int(1000*(magnification-1.5))
+        elif(magnification >= 1):
+            focus_distance = 39000 + int(3000*(magnification-1))
+        else:
+            focus_distance = 31000 + int(8000*(magnification-0.7))
 
+        return focus_distance
 
     def connect_tmcm(self,var):
         #call comand to connect port
@@ -364,6 +474,26 @@ class Gui(tk.Tk):
         self.position_table_angle_val.config(text=str(self.positions[5]))
         
         self.after(100,self.update_positon)
+
+    def is_target_reachable(self,motor,distance):
+        if(motor == 0):
+            return self.is_distance_ok(target=distance,max_distance=96000) 
+        elif(motor == 1):
+            return self.is_distance_ok(target=distance,max_distance=86000) 
+        elif(motor == 2):
+            return self.is_distance_ok(target=distance,max_distance=70000) 
+        elif(motor == 3):
+            return self.is_distance_ok(target=distance,max_distance=50000) 
+        elif(motor == 5):
+            return self.is_distance_ok(target=distance,max_distance=270) 
+        
+    def is_distance_ok(self,target,max_distance):
+        if(target >= max_distance):
+            return 0
+        elif(target < 0):
+            return 0
+        else:
+            return 1
 
 gui = Gui()
 gui.mainloop()

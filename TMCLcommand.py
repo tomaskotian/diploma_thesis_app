@@ -29,6 +29,7 @@ class TMCLcmd:
         self.set_motor_parametres()
 
     def get_ports(self) -> dict:
+        self.ser.find_ports()
         return self.ser.ports_dict
 
     def motor_stop(self,motor:int):
@@ -53,7 +54,9 @@ class TMCLcmd:
 
         if(motor == 4):
             # motor 4  270deg = 393750 steps 1deg  = 1458.33 steps
-            return int(((position-0.65) * 55.1) * 1458.33)
+            if(position == 0):
+                return int(0.1 * 1458.33)
+            return int(position * 1458.33)
         elif(motor == 5):
             # motor 5 rotation small gear 525000 steps 270deg = 2953125 steps 1 deg = 10937.5 step
             return int(position * 10937.5)

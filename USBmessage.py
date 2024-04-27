@@ -48,14 +48,17 @@ class Message_rx:
 
 class Serial_comunication:
     def __init__(self):
-        self.ports_dict = self.get_ports()
+
+        self.ports_dict = {}
         self.error = {}
         self.reply = Message_rx([0,0,0,0,0,0,0,0,0])
 
-    def get_ports(self):
+        self.find_ports()
+
+    def find_ports(self):
         try:       
             com_ports = serial.tools.list_ports.comports()
-            return {com.name: com.serial_number for com in com_ports}
+            self.ports_dict = {com.name: com.serial_number for com in com_ports}
         except Exception as e:
             logging.error(e)
 
