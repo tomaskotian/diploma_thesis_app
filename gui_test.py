@@ -207,7 +207,11 @@ class Gui(tk.Tk):
         self.function_center = tk.Button(self.downbar_frame,width=15,height=2,text="Center",command=self.find_center).grid(column=1,row=0)
         self.function_selection = tk.Button(self.downbar_frame,width=15,height=2,text="Manual selection").grid(column=2,row=0)
         self.function_find_chip = tk.Button(self.downbar_frame,width=15,height=2,text="Center chip",command=self.center_chip).grid(column=3,row=0)
-        self.function_click_move = tk.Button(self.downbar_frame,width=15,height=2,text="Click and move ").grid(column=4,row=0)
+
+        self.function_click_move_var = tk.BooleanVar(self.downbar_frame,False)
+        self.function_click_move = tk.Checkbutton(self.downbar_frame,variable=self.function_click_move_var,text="Click and move")
+        self.function_click_move.grid(column=4,row=0)
+
 
         self.messages = scrolledtext.ScrolledText(self.downbar_frame,wrap=tk.WORD,width=80,height=10)
         self.messages.bind('<Key>',lambda e: "break")
@@ -243,6 +247,7 @@ class Gui(tk.Tk):
         
         self.tmcm.find_all_references()
         self.canvas = tk.Canvas(self.camera_frame,width=640,height=480)
+        self.canvas.bind('<Button-1>',self.cordinates)
         self.canvas.pack(anchor=tk.CENTER,side="right")
         if(len(cam_ports)):
             self.connect_cam(0)
@@ -270,6 +275,33 @@ class Gui(tk.Tk):
 
         self.after(15,self.timer_20ms)    
 
+    def cordinates(self,event):
+        print(event.x)
+        print(event.y)
+        if(self.function_click_move_var.get()):
+            if(event.x >= 480):
+                if(event.y >= 360):
+                    self.move_x_minus()
+                    self.move_y_minus()
+                elif(event.y >= 120):
+                    self.move_y_minus()
+                else:
+                    self.move_x_plus()
+                    self.move_y_minus()
+            elif(event.x >= 160):
+                if(event.y >= 360):
+                    self.move_x_minus()
+                elif(event.y <= 120):
+                    self.move_x_plus()
+            else:
+                if(event.y >= 360):
+                    self.move_x_minus()
+                    self.move_y_plus()
+                elif(event.y >= 120):
+                    self.move_y_plus()
+                else:
+                    self.move_x_plus()
+                    self.move_y_plus()
 
     def center_chip(self):
         y = int((self.chip_size_pixel[0]-(640/2-self.chip_size_pixel[2]/2))/0.1) + self.positions[1]
