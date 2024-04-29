@@ -4,6 +4,7 @@ import cv2
 from PIL import Image,ImageTk
 import TMCLcommand as tmc
 import time
+import numpy as np
 
 
 class Gui(tk.Tk):
@@ -21,6 +22,7 @@ class Gui(tk.Tk):
                                   5:250, 5.1:255, 5.2:260, 5.3:265, 5.4:270, 5.5:275, 5.6:280}
         self.focus_distance = {0.7:0, 1:40, 1.5:80, 2:100, 2.5:130, 3:150, 3.5:180, 4:200, 4.5:230, 5:250, 5.6:280}
         self.positions = []
+        self.chip_size_pixel = []
         self.led_intensity_target = 0
         self.led_intensity_var = 0 
         self.unit = "mm"
@@ -203,17 +205,43 @@ class Gui(tk.Tk):
 
         self.function_home = tk.Button(self.downbar_frame,width=15,height=2,text="Home",command=self.find_home).grid(column=0,row=0)
         self.function_center = tk.Button(self.downbar_frame,width=15,height=2,text="Center",command=self.find_center).grid(column=1,row=0)
-        self.function_rotate = tk.Button(self.downbar_frame,width=15,height=2,text="Auto rotate").grid(column=2,row=0)
-        self.function_find_obj = tk.Button(self.downbar_frame,width=15,height=2,text="Find object").grid(column=3,row=0)
-        self.function_center_obj = tk.Button(self.downbar_frame,width=15,height=2,text="Center object").grid(column=4,row=0)
-        self.function_click_move = tk.Button(self.downbar_frame,width=15,height=2,text="Click and move").grid(column=5,row=0)
+        self.function_selection = tk.Button(self.downbar_frame,width=15,height=2,text="Manual selection").grid(column=2,row=0)
+        self.function_find_chip = tk.Button(self.downbar_frame,width=15,height=2,text="Center chip",command=self.center_chip).grid(column=3,row=0)
+        self.function_click_move = tk.Button(self.downbar_frame,width=15,height=2,text="Click and move ").grid(column=4,row=0)
 
-        self.messages = scrolledtext.ScrolledText(self.downbar_frame,wrap=tk.WORD,width=100,height=10)
+        self.messages = scrolledtext.ScrolledText(self.downbar_frame,wrap=tk.WORD,width=80,height=10)
         self.messages.bind('<Key>',lambda e: "break")
         self.messages.grid(row=1,column=0,columnspan=5,pady=2)
 
-        #----------------------------------------------------------------------------------------------------
+        self.find_chip_frame = tk.Frame(self.downbar_frame,bg="blue")
+        self.find_chip_frame.grid(column=5,row=0,rowspan=2,sticky="nsew")
+
+        self.find_chip_var = tk.BooleanVar(self.find_chip_frame,False)
+        self.function_find_chip = tk.Checkbutton(self.find_chip_frame,variable=self.find_chip_var,text="Find chip")
+        self.function_find_chip.grid(column=0,row=0)
+
+        # self.show_edges_var = tk.BooleanVar(self.find_chip_frame,True)
+        # self.show_edges = tk.Checkbutton(self.find_chip_frame,variable=self.show_edges_var,text="Show edges")
+        # self.show_edges.grid(row=0,column=1,padx=5)
+        # self.show_edges.select()
+
+        self.th1_var = tk.IntVar(self.find_chip_frame,120)
+        self.th1 = tk.Scale(self.find_chip_frame,variable=self.th1_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
+        self.th1.grid(row=1,column=0)
         
+        self.th2_var = tk.IntVar(self.find_chip_frame,100)
+        self.th2 = tk.Scale(self.find_chip_frame,variable=self.th2_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
+        self.th2.grid(row=2,column=0)
+    
+        self.th3_var = tk.IntVar(self.find_chip_frame,2000)
+        self.th3 = tk.Scale(self.find_chip_frame,variable=self.th3_var, from_=0, to=100000,resolution=4,length=300, orient=tk.HORIZONTAL)
+        self.th3.grid(row=3,column=0)
+
+        self.find_param = tk.Checkbutton(self.find_chip_frame,text="Fixed")
+        self.find_param.grid(row=1,column=1,rowspan=3,padx=5)
+        self.find_param.select()
+        
+        self.tmcm.find_all_references()
         self.canvas = tk.Canvas(self.camera_frame,width=640,height=480)
         self.canvas.pack(anchor=tk.CENTER,side="right")
         if(len(cam_ports)):
@@ -225,51 +253,8 @@ class Gui(tk.Tk):
         self.timer_100ms()
         self.timer_20ms()
 
-    def led_intesity_0(self):
-        # self.led_intensity_var = 0
-        self.led_0_percent.select()
-        self.led_25_percent.deselect()
-        self.led_50_percent.deselect()
-        self.led_75_percent.deselect()
-        self.led_100_percent.deselect()
-        self.led_intensity_target = 0
-    
-    def led_intesity_25(self):
-        # self.led_intensity_var = 0
-        self.led_0_percent.deselect()
-        self.led_25_percent.select()
-        self.led_50_percent.deselect()
-        self.led_75_percent.deselect()
-        self.led_100_percent.deselect()
-        self.led_intensity_target = 6
 
-    def led_intesity_50(self):
-        # self.led_intensity_var = 0
-        self.led_0_percent.deselect()
-        self.led_25_percent.deselect()
-        self.led_50_percent.select()
-        self.led_75_percent.deselect()
-        self.led_100_percent.deselect()
-        self.led_intensity_target = 12
-
-    def led_intesity_75(self):
-        # self.led_intensity_var = 0
-        self.led_0_percent.deselect()
-        self.led_25_percent.deselect()
-        self.led_50_percent.deselect()
-        self.led_75_percent.select()
-        self.led_100_percent.deselect()
-        self.led_intensity_target = 18
-
-    def led_intesity_100(self):
-        # self.led_intensity_var = 0
-        self.led_0_percent.deselect()
-        self.led_25_percent.deselect()
-        self.led_50_percent.deselect()
-        self.led_75_percent.deselect()
-        self.led_100_percent.select()
-        self.led_intensity_target = 25
-
+#----------------------------------------------------------------------------------------------------
     def timer_20ms(self):
         if(self.led_auto_var.get()):
             target = int(20/4)
@@ -284,6 +269,20 @@ class Gui(tk.Tk):
                 self.led_intensity_var = 0
 
         self.after(15,self.timer_20ms)    
+
+
+    def center_chip(self):
+        y = int((self.chip_size_pixel[0]-(640/2-self.chip_size_pixel[2]/2))/0.1) + self.positions[1]
+        x = int((self.chip_size_pixel[1]-(480/2-self.chip_size_pixel[3]/2))/0.1) + self.positions[0]
+        print("----")
+        print(self.chip_size_pixel[2])
+        print(self.chip_size_pixel[3])
+        print(self.chip_size_pixel[0])
+        print(self.chip_size_pixel[1])
+        print(x)
+        print(y)
+        self.tmcm.move_to_abs(0,x)
+        self.tmcm.move_to_abs(1,y)
 
     def find_center(self):
         self.tmcm.move_to_abs(0,41300)
@@ -458,10 +457,36 @@ class Gui(tk.Tk):
     def update_webcam(self):
         ret, frame = self.video_capture.read()
         if ret:
-            self.current_image = Image.fromarray(cv2.cvtColor(frame,cv2.COLOR_BGR2RGB))
+            imgConter = frame.copy()
+            if(self.find_chip_var.get()):
+                imgBlur = cv2.GaussianBlur(frame,(7,7),1)
+                imgGray = cv2.cvtColor(imgBlur,cv2.COLOR_BGR2GRAY)
+                imgCanny = cv2.Canny(imgGray,self.th1_var.get(),self.th2_var.get())
+                kernel = np.ones((5,5))
+                imgDil = cv2.dilate(imgCanny,kernel,iterations=1)
+                self.getConters(imgDil,imgConter,self.th3_var.get())
+            self.current_image = Image.fromarray(imgConter)
+
             self.photo = ImageTk.PhotoImage(image=self.current_image) 
             self.canvas.create_image(0,0,image=self.photo,anchor=tk.NW)
             self.after(15,self.update_webcam)
+    
+    def getConters(self,img,imgConters,th):
+        conters,hierarchy = cv2.findContours(img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+        for cnt in conters:
+            area = cv2.contourArea(cnt)
+            if(area >= th):
+                cv2.drawContours(imgConters,cnt,-1,(255,0,255),7)
+                peri = cv2.arcLength(cnt,True)
+                approx =  cv2.approxPolyDP(cnt,0.02*peri,True)
+                # print(approx)
+                x,y,w,h = cv2.boundingRect(approx)
+                self.chip_size_pixel = [x,y,w,h]
+                # print(f"{x} {y}")
+                # print(approx.item((0,0,0)))
+                # print("----")
+                # print(f"{x},{y},{w},{h}")
+                cv2.rectangle(imgConters,(x,y),(x+w,y+h),(0,255,0),5)
 
     def update_positon(self):
         self.tmcm.get_actual_positions()

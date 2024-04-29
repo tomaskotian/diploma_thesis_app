@@ -22,21 +22,19 @@ class WebcamApp:
         self.th3 = tk.Scale(self.window,variable=self.th3_var, from_=1, to=100000, resolution=1000, orient=tk.HORIZONTAL)
         self.th3.grid(row=2,column=0)
 
+
+        #---camera----#
         self.video_capture = cv2.VideoCapture(0)
-
         self.current_image = None
-
         self.canvas = tk.Canvas(window,width=640,height=480)
         self.canvas.grid(row=3,column=0)
-
         self.update_webcam()
+        #---camera----#
 
-
+    #---camera----#
     def update_webcam(self):
         ret, frame = self.video_capture.read()
-
         if ret:
-            
             imgCounter = frame.copy()
 
             imgBlur = cv2.GaussianBlur(frame,(7,7),1)
@@ -47,14 +45,14 @@ class WebcamApp:
             kernel = np.ones((5,5))
             imgDil = cv2.dilate(imgCanny,kernel,iterations=1)
 
-            self.getCounters(imgDil,imgCounter,self.th3_var.get())
+            self.getConters(imgDil,imgCounter,self.th3_var.get())
 
             self.current_image = Image.fromarray(imgCounter)
             self.photo = ImageTk.PhotoImage(image=self.current_image)
             self.canvas.create_image(0,0,image=self.photo,anchor=tk.NW)
-            self.window.after(1005,self.update_webcam)
+            self.window.after(100,self.update_webcam)
 
-    def getCounters(self,img,imgCounters,th):
+    def getConters(self,img,imgCounters,th):
         counters,hierarchy = cv2.findContours(img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
         for cnt in counters:
             area = cv2.contourArea(cnt)
@@ -71,11 +69,6 @@ class WebcamApp:
                 print(f"{x},{y},{w},{h}")
                 cv2.rectangle(imgCounters,(x,y),(x+w,y+h),(0,255,0),5)
 
-    def get_angle(self,points,x,y):
-        y_len = points.item((3,0,1)) - points.item((0,0,1))
-        x_len = points.item((3,0,0)) - points.item((1,0,0))
-        angle = math.degrees((1/np.tan(y_len/x_len)))
-        print(angle)
 
 root = tk.Tk()
 
