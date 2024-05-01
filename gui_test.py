@@ -5,11 +5,23 @@ from PIL import Image,ImageTk
 import TMCLcommand as tmc
 import time
 import numpy as np
+import json
 
 
 class Gui(tk.Tk):
     def __init__(self):
         super().__init__()
+
+        self.menubar = tk.Menu(self)
+
+        self.menu_file = tk.Menu(self.menubar,tearoff=0)
+
+        self.menubar.add_cascade(label="Settings",menu=self.menu_file)
+        self.menu_file.add_checkbutton(label="active shortcuts")
+        self.menu_file.add_command(label="Shortcuts",command=self.set_shortcuts)
+        self.config(menu=self.menubar)
+        
+
 
         self.magnification_deg = {0.7:0, 0.8:13, 0.9:27, 1:40, 1.1:48, 1.2:56, 1.3:64, 1.4:72, 
                                   1.5:80, 1.6:84, 1.7:88, 1.8:92, 1.9:96,
@@ -22,6 +34,7 @@ class Gui(tk.Tk):
                                   5:250, 5.1:255, 5.2:260, 5.3:265, 5.4:270, 5.5:275, 5.6:280}
         self.focus_distance = {0.7:0, 1:40, 1.5:80, 2:100, 2.5:130, 3:150, 3.5:180, 4:200, 4.5:230, 5:250, 5.6:280}
         self.positions = []
+        self.shortcuts_dict = {}
         self.chip_size_pixel = []
         self.led_intensity_target = 0
         self.led_intensity_var = 0 
@@ -30,19 +43,26 @@ class Gui(tk.Tk):
         self.tmcm_ports = [f"{com}: {self.tmcm.get_ports()[com]}" for com in self.tmcm.get_ports().keys()]
 
         cam_ports = self.find_available_cameras()
+        self.load_shortcuts(original=False)
 
         self.title("Hello world")
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
-        self.geometry(f"{self.screen_width}x{self.screen_height}")
+        self.geometry(f"{self.screen_width}x{self.screen_height}+0+0")
+        self.state('zoomed') 
 
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=0)
+        self.grid_columnconfigure(1, weight=3)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
 
+        self.bind("<Key>",self.key_pressed)
+        self.bind("<MouseWheel>",self.wheel)
+        self.bind("<Button-3>",self.change_unit)
+
         self.sidebar_frame = tk.Frame(self,width=200,bg="grey",padx=10,pady=10)
         self.sidebar_frame.grid(row=0,column=0,rowspan=2,sticky="nsew")
+        self.sidebar_frame.grid_rowconfigure((0,1,2,3,4,5,6,7,8,9),weight=1)
 
         self.camera_frame = tk.Frame(self,width=100,bg="green",padx=200,pady=50)
         self.camera_frame.grid(row=0,column=1,rowspan=1,sticky="nsew")
@@ -118,9 +138,6 @@ class Gui(tk.Tk):
         self.led_bar = tk.Scale(self.led_frame,variable=self.intesity_led_var, from_=0, to=100,resolution=4,length=300, orient=tk.HORIZONTAL)
         self.led_bar.grid(row=1,column=0,columnspan=2)
         
-        self.led_var = tk.IntVar(self.led_frame,0)
-        self.led_button = tk.Button(self.led_frame,text="intensity++",width=10,command=self.led_intensity_plus)
-        # self.led_button.grid(row=1,column=0)
         
         self.led_auto_var = tk.BooleanVar(self.led_frame,True)
         self.led_auto = tk.Checkbutton(self.led_frame,text="Automatic",variable=self.led_auto_var)
@@ -168,7 +185,7 @@ class Gui(tk.Tk):
         self.step_slider.grid(row=1,column=0,columnspan=3)
 
         self.joystick_frame = tk.Frame(self.sidebar_frame,bg="blue")
-        self.joystick_frame.grid(row=7,column=0,columnspan=2,sticky="nsew",pady=10)
+        self.joystick_frame.grid(row=7,column=0,columnspan=3,sticky="nsew",pady=10)
 
         self.joystick_table = tk.Label(self.joystick_frame,text="Table")
         self.joystick_table.grid(row=0,column=0,columnspan=3,sticky="nsew")
@@ -205,50 +222,44 @@ class Gui(tk.Tk):
 
         self.function_home = tk.Button(self.downbar_frame,width=15,height=2,text="Home",command=self.find_home).grid(column=0,row=0)
         self.function_center = tk.Button(self.downbar_frame,width=15,height=2,text="Center",command=self.find_center).grid(column=1,row=0)
-        self.function_selection = tk.Button(self.downbar_frame,width=15,height=2,text="Manual selection").grid(column=2,row=0)
-        self.function_find_chip = tk.Button(self.downbar_frame,width=15,height=2,text="Center chip",command=self.center_chip).grid(column=3,row=0)
+        self.function_find_chip = tk.Button(self.downbar_frame,width=15,height=2,text="Center chip",command=self.center_chip).grid(column=2,row=0)
 
         self.function_click_move_var = tk.BooleanVar(self.downbar_frame,False)
         self.function_click_move = tk.Checkbutton(self.downbar_frame,variable=self.function_click_move_var,text="Click and move")
-        self.function_click_move.grid(column=4,row=0)
+        self.function_click_move.grid(column=3,row=0)
 
 
-        self.messages = scrolledtext.ScrolledText(self.downbar_frame,wrap=tk.WORD,width=80,height=10)
+        self.messages = scrolledtext.ScrolledText(self.downbar_frame,wrap=tk.WORD)
         self.messages.bind('<Key>',lambda e: "break")
-        self.messages.grid(row=1,column=0,columnspan=5,pady=2)
+        self.messages.grid(row=1,column=0,columnspan=4,pady=5,padx=5,sticky="nswe")
 
         self.find_chip_frame = tk.Frame(self.downbar_frame,bg="blue")
-        self.find_chip_frame.grid(column=5,row=0,rowspan=2,sticky="nsew")
+        self.find_chip_frame.grid(column=5,row=0,rowspan=2,padx=5,pady=5,sticky="nsew")
 
         self.find_chip_var = tk.BooleanVar(self.find_chip_frame,False)
         self.function_find_chip = tk.Checkbutton(self.find_chip_frame,variable=self.find_chip_var,text="Find chip")
         self.function_find_chip.grid(column=0,row=0)
 
-        # self.show_edges_var = tk.BooleanVar(self.find_chip_frame,True)
-        # self.show_edges = tk.Checkbutton(self.find_chip_frame,variable=self.show_edges_var,text="Show edges")
-        # self.show_edges.grid(row=0,column=1,padx=5)
-        # self.show_edges.select()
-
         self.th1_var = tk.IntVar(self.find_chip_frame,120)
         self.th1 = tk.Scale(self.find_chip_frame,variable=self.th1_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
-        self.th1.grid(row=1,column=0)
+        self.th1.grid(row=2,column=0)
         
         self.th2_var = tk.IntVar(self.find_chip_frame,100)
         self.th2 = tk.Scale(self.find_chip_frame,variable=self.th2_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
-        self.th2.grid(row=2,column=0)
+        self.th2.grid(row=3,column=0)
     
         self.th3_var = tk.IntVar(self.find_chip_frame,2000)
         self.th3 = tk.Scale(self.find_chip_frame,variable=self.th3_var, from_=0, to=100000,resolution=4,length=300, orient=tk.HORIZONTAL)
-        self.th3.grid(row=3,column=0)
+        self.th3.grid(row=4,column=0)
 
-        self.find_param = tk.Checkbutton(self.find_chip_frame,text="Fixed")
-        self.find_param.grid(row=1,column=1,rowspan=3,padx=5)
+        self.find_param = tk.Checkbutton(self.find_chip_frame,text="Fixed parametres")
+        self.find_param.grid(row=1,column=0,padx=5)
         self.find_param.select()
         
         self.tmcm.find_all_references()
         self.canvas = tk.Canvas(self.camera_frame,width=640,height=480)
         self.canvas.bind('<Button-1>',self.cordinates)
-        self.canvas.pack(anchor=tk.CENTER,side="right")
+        self.canvas.pack(anchor=tk.CENTER)
         if(len(cam_ports)):
             self.connect_cam(0)
         if(self.video_capture != None):
@@ -260,6 +271,79 @@ class Gui(tk.Tk):
 
 
 #----------------------------------------------------------------------------------------------------
+    def wheel(self,event):
+        if(event.delta == -120):
+            self.step_var.set(self.step_var.get()+1)
+            if(self.step_var.get() == 500):
+                self.step_var.set(1)
+        else:
+            self.step_var.set(self.step_var.get()-1)
+            if(self.step_var.get() == 1):
+                self.step_var.set(500)
+
+    def change_unit(self,event):
+        if(self.unit == "mm"):
+            self.unit = "um"
+            self.step_um.select()
+            self.step_mm.deselect()
+        elif(self.unit == "um"):
+            self.unit = "mm"
+            self.step_mm.select()
+            self.step_um.deselect()
+
+    def key_pressed(self,event):
+        print("Key pressed:", event.keysym)
+        match event.keysym:
+            case "Return":
+                self.stop_tmcm()
+            case "p":
+                self.intesity_led_var.set(self.intesity_led_var.get()+4)
+                if(self.intesity_led_var.get() == 100):
+                    self.intesity_led_var.set(0) 
+            case "l":
+                self.intesity_led_var.set(self.intesity_led_var.get()-4)
+                if(self.intesity_led_var.get() == 0):
+                    self.intesity_led_var.set(100) 
+            case "o":
+                if(self.led_auto_var.get()):
+                    self.led_auto_var.set(False)
+                else:
+                    self.led_auto_var.set(True)
+            case "k":
+                self.camera_mag_var.set(round(self.camera_mag_var.get()+0.1,1))
+                if(self.camera_mag_var.get() == 5.6):
+                    self.camera_mag_var.set(0.7) 
+            case "m":
+                self.camera_mag_var.set(round(self.camera_mag_var.get()-0.1,1))
+                if(self.camera_mag_var.get() == 0.7):
+                    self.camera_mag_var.set(5.6) 
+            case "i":
+                if(self.camera_focus_var.get()):
+                    self.camera_focus_var.set(False)
+                else:
+                    self.camera_focus_var.set(True)
+            case "j":
+                self.move_camera_up()
+            case "n":
+                self.move_camera_down()
+            case "q":
+                self.rotate_right()
+            case "w":
+                self.move_x_plus()
+            case "e":
+                self.rotate_left()
+            case "s":
+                self.move_x_minus()
+            case "a":
+                self.move_y_plus()
+            case "d":
+                self.move_y_minus()
+            case "r":
+                self.move_probe_up()
+            case "f":
+                self.move_probe_down()
+
+    
     def timer_20ms(self):
         if(self.led_auto_var.get()):
             target = int(20/4)
@@ -302,6 +386,50 @@ class Gui(tk.Tk):
                 else:
                     self.move_x_plus()
                     self.move_y_plus()
+    
+    def set_shortcuts(self):
+        secondary_window = tk.Toplevel()
+        secondary_window.title("Secondary Window")
+        secondary_window.config(width=300, height=200)
+        first_col = tk.Label(master=secondary_window,text="Command")
+        first_col.grid(row=0,column=0)
+        second_col = tk.Label(master=secondary_window,text="Shortcut")
+        second_col.grid(row=0,column=1)
+
+        row_list = []
+        row_c = 1
+        for key in self.shortcuts_dict.keys():
+            name, shortcut  = self.get_shortcuts_line(secondary_window,key)
+            name.grid(row=row_c,column=0)
+            shortcut.grid(row=row_c,column=1)
+            row_list.append([name,shortcut])
+            row_c += 1
+        
+        save_button = tk.Button(master=secondary_window,text="Save",command=self.save)
+        save_button.grid(row=row_c,column=0)
+        reset_button = tk.Button(master=secondary_window,text="Reset",command=self.reset)
+        reset_button.grid(row=row_c,column=1)
+
+    def save(self):
+        pass
+
+    def reset(self):
+        pass
+
+    def get_shortcuts_line(self,master,key):
+        name = tk.Label(master=master,text=key)
+        shortcut = tk.Entry(master=master)
+        shortcut.insert(0,self.shortcuts_dict[key])
+        return name,shortcut
+
+        
+    def load_shortcuts(self,original:bool):
+        if(original):
+            with open("original_shortcuts.json","r") as FR:
+                self.shortcuts_dict = json.load(FR)
+        else:
+            with open("user_shortcuts.json","r") as FR:
+                self.shortcuts_dict = json.load(FR)   
 
     def center_chip(self):
         y = int((self.chip_size_pixel[0]-(640/2-self.chip_size_pixel[2]/2))/0.1) + self.positions[1]
