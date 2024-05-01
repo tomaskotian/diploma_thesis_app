@@ -35,7 +35,9 @@ class Gui(tk.Tk):
         self.focus_distance = {0.7:0, 1:40, 1.5:80, 2:100, 2.5:130, 3:150, 3.5:180, 4:200, 4.5:230, 5:250, 5.6:280}
         self.positions = []
         self.shortcuts_dict = {}
+        self.shortcuts_dict_new = {}
         self.chip_size_pixel = []
+        self.row_list = []
         self.led_intensity_target = 0
         self.led_intensity_var = 0 
         self.unit = "mm"
@@ -49,6 +51,7 @@ class Gui(tk.Tk):
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
         self.geometry(f"{self.screen_width}x{self.screen_height}+0+0")
+        # self.geometry(f"{1100}x{580}")
         self.state('zoomed') 
 
         self.grid_columnconfigure(0, weight=1)
@@ -60,15 +63,16 @@ class Gui(tk.Tk):
         self.bind("<MouseWheel>",self.wheel)
         self.bind("<Button-3>",self.change_unit)
 
-        self.sidebar_frame = tk.Frame(self,width=200,bg="grey",padx=10,pady=10)
+        self.sidebar_frame = tk.Frame(self,bg="grey",padx=10,pady=10)
         self.sidebar_frame.grid(row=0,column=0,rowspan=2,sticky="nsew")
         self.sidebar_frame.grid_rowconfigure((0,1,2,3,4,5,6,7,8,9),weight=1)
 
-        self.camera_frame = tk.Frame(self,width=100,bg="green",padx=200,pady=50)
+        self.camera_frame = tk.Frame(self,bg="green",padx=200,pady=50)
         self.camera_frame.grid(row=0,column=1,rowspan=1,sticky="nsew")
 
-        self.downbar_frame = tk.Frame(self,width=100,height=200,bg="red",padx=10,pady=5)
+        self.downbar_frame = tk.Frame(self,bg="red",padx=10,pady=5)
         self.downbar_frame.grid(row=1,column=1,rowspan=1,sticky="nsew")
+        self.downbar_frame.grid_columnconfigure((0,1),weight=1)
 
         self.var_tmcm = tk.StringVar(self.sidebar_frame,self.tmcm.connection)
         self.tmcm_options = tk.OptionMenu(self.sidebar_frame,self.var_tmcm,*self.tmcm_ports,command=self.connect_tmcm)
@@ -220,21 +224,23 @@ class Gui(tk.Tk):
         self.probe_down = tk.Button(self.joystick_frame,text="p_down",command=self.move_probe_down)
         self.probe_down.grid(row=3,column=3)
 
-        self.function_home = tk.Button(self.downbar_frame,width=15,height=2,text="Home",command=self.find_home).grid(column=0,row=0)
-        self.function_center = tk.Button(self.downbar_frame,width=15,height=2,text="Center",command=self.find_center).grid(column=1,row=0)
-        self.function_find_chip = tk.Button(self.downbar_frame,width=15,height=2,text="Center chip",command=self.center_chip).grid(column=2,row=0)
+        self.function_frame  = tk.Frame(self.downbar_frame)
+        self.function_frame.grid(row=0,column=0,sticky="nswe",padx=5,pady=5)
 
-        self.function_click_move_var = tk.BooleanVar(self.downbar_frame,False)
-        self.function_click_move = tk.Checkbutton(self.downbar_frame,variable=self.function_click_move_var,text="Click and move")
+        self.function_home = tk.Button(self.function_frame,width=15,height=2,text="Home",command=self.find_home).grid(column=0,row=0)
+        self.function_center = tk.Button(self.function_frame,width=15,height=2,text="Center",command=self.find_center).grid(column=1,row=0)
+        self.function_find_chip = tk.Button(self.function_frame,width=15,height=2,text="Center chip",command=self.center_chip).grid(column=2,row=0)
+
+        self.function_click_move_var = tk.BooleanVar(self.function_frame,False)
+        self.function_click_move = tk.Checkbutton(self.function_frame,variable=self.function_click_move_var,text="Click and move")
         self.function_click_move.grid(column=3,row=0)
 
-
-        self.messages = scrolledtext.ScrolledText(self.downbar_frame,wrap=tk.WORD)
+        self.messages = scrolledtext.ScrolledText(self.function_frame,wrap=tk.WORD)
         self.messages.bind('<Key>',lambda e: "break")
         self.messages.grid(row=1,column=0,columnspan=4,pady=5,padx=5,sticky="nswe")
 
         self.find_chip_frame = tk.Frame(self.downbar_frame,bg="blue")
-        self.find_chip_frame.grid(column=5,row=0,rowspan=2,padx=5,pady=5,sticky="nsew")
+        self.find_chip_frame.grid(column=1,row=0,padx=5,pady=5,sticky="nsew")
 
         self.find_chip_var = tk.BooleanVar(self.find_chip_frame,False)
         self.function_find_chip = tk.Checkbutton(self.find_chip_frame,variable=self.find_chip_var,text="Find chip")
@@ -242,18 +248,18 @@ class Gui(tk.Tk):
 
         self.th1_var = tk.IntVar(self.find_chip_frame,120)
         self.th1 = tk.Scale(self.find_chip_frame,variable=self.th1_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
-        self.th1.grid(row=2,column=0)
+        self.th1.grid(row=2,column=0,sticky="nswe",pady=5,padx=5)
         
         self.th2_var = tk.IntVar(self.find_chip_frame,100)
         self.th2 = tk.Scale(self.find_chip_frame,variable=self.th2_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
-        self.th2.grid(row=3,column=0)
+        self.th2.grid(row=3,column=0,sticky="nswe",pady=5,padx=5)
     
         self.th3_var = tk.IntVar(self.find_chip_frame,2000)
         self.th3 = tk.Scale(self.find_chip_frame,variable=self.th3_var, from_=0, to=100000,resolution=4,length=300, orient=tk.HORIZONTAL)
-        self.th3.grid(row=4,column=0)
+        self.th3.grid(row=4,column=0,sticky="nswe",pady=5,padx=5)
 
         self.find_param = tk.Checkbutton(self.find_chip_frame,text="Fixed parametres")
-        self.find_param.grid(row=1,column=0,padx=5)
+        self.find_param.grid(row=1,column=0,padx=5,pady=5,sticky="nswe")
         self.find_param.select()
         
         self.tmcm.find_all_references()
@@ -293,55 +299,54 @@ class Gui(tk.Tk):
 
     def key_pressed(self,event):
         print("Key pressed:", event.keysym)
-        match event.keysym:
-            case "Return":
-                self.stop_tmcm()
-            case "p":
-                self.intesity_led_var.set(self.intesity_led_var.get()+4)
-                if(self.intesity_led_var.get() == 100):
-                    self.intesity_led_var.set(0) 
-            case "l":
-                self.intesity_led_var.set(self.intesity_led_var.get()-4)
-                if(self.intesity_led_var.get() == 0):
-                    self.intesity_led_var.set(100) 
-            case "o":
-                if(self.led_auto_var.get()):
-                    self.led_auto_var.set(False)
-                else:
-                    self.led_auto_var.set(True)
-            case "k":
-                self.camera_mag_var.set(round(self.camera_mag_var.get()+0.1,1))
-                if(self.camera_mag_var.get() == 5.6):
-                    self.camera_mag_var.set(0.7) 
-            case "m":
-                self.camera_mag_var.set(round(self.camera_mag_var.get()-0.1,1))
-                if(self.camera_mag_var.get() == 0.7):
-                    self.camera_mag_var.set(5.6) 
-            case "i":
-                if(self.camera_focus_var.get()):
-                    self.camera_focus_var.set(False)
-                else:
-                    self.camera_focus_var.set(True)
-            case "j":
-                self.move_camera_up()
-            case "n":
-                self.move_camera_down()
-            case "q":
-                self.rotate_right()
-            case "w":
-                self.move_x_plus()
-            case "e":
-                self.rotate_left()
-            case "s":
-                self.move_x_minus()
-            case "a":
-                self.move_y_plus()
-            case "d":
-                self.move_y_minus()
-            case "r":
-                self.move_probe_up()
-            case "f":
-                self.move_probe_down()
+        if(event.keysym == self.shortcuts_dict["stop"]):
+            self.stop_tmcm()
+        elif(event.keysym == self.shortcuts_dict["LED intesity plus"]):
+            self.intesity_led_var.set(self.intesity_led_var.get()+4)
+            if(self.intesity_led_var.get() == 100):
+                self.intesity_led_var.set(0) 
+        elif(event.keysym == self.shortcuts_dict["LED intesity minus"]):
+            self.intesity_led_var.set(self.intesity_led_var.get()-4)
+            if(self.intesity_led_var.get() == 0):
+                self.intesity_led_var.set(100) 
+        elif(event.keysym == self.shortcuts_dict["LED automatic"]):
+            if(self.led_auto_var.get()):
+                self.led_auto_var.set(False)
+            else:
+                self.led_auto_var.set(True)
+        elif(event.keysym == self.shortcuts_dict["magnification plus"]):
+            self.camera_mag_var.set(round(self.camera_mag_var.get()+0.1,1))
+            if(self.camera_mag_var.get() == 5.6):
+                self.camera_mag_var.set(0.7) 
+        elif(event.keysym == self.shortcuts_dict["magnification minus"]):
+            self.camera_mag_var.set(round(self.camera_mag_var.get()-0.1,1))
+            if(self.camera_mag_var.get() == 0.7):
+                self.camera_mag_var.set(5.6) 
+        elif(event.keysym == self.shortcuts_dict["camera automatic focus"]):
+            if(self.camera_focus_var.get()):
+                self.camera_focus_var.set(False)
+            else:
+                self.camera_focus_var.set(True)
+        elif(event.keysym == self.shortcuts_dict["camera up"]):
+            self.move_camera_up()
+        elif(event.keysym == self.shortcuts_dict["camera down"]):
+            self.move_camera_down()
+        elif(event.keysym == self.shortcuts_dict["rotate right"]):
+            self.rotate_right()
+        elif(event.keysym == self.shortcuts_dict["table forward"]):
+            self.move_x_plus()
+        elif(event.keysym == self.shortcuts_dict["rotate left"]):
+            self.rotate_left()
+        elif(event.keysym == self.shortcuts_dict["table backward"]):
+            self.move_x_minus()
+        elif(event.keysym == self.shortcuts_dict["table left"]):
+            self.move_y_plus()
+        elif(event.keysym == self.shortcuts_dict["table right"]):
+            self.move_y_minus()
+        elif(event.keysym == self.shortcuts_dict["probe up"]):
+            self.move_probe_up()
+        elif(event.keysym == self.shortcuts_dict["probe down"]):
+            self.move_probe_down()
 
     
     def timer_20ms(self):
@@ -396,13 +401,13 @@ class Gui(tk.Tk):
         second_col = tk.Label(master=secondary_window,text="Shortcut")
         second_col.grid(row=0,column=1)
 
-        row_list = []
+        self.row_list = []
         row_c = 1
         for key in self.shortcuts_dict.keys():
-            name, shortcut  = self.get_shortcuts_line(secondary_window,key)
+            name, shortcut ,var = self.get_shortcuts_line(secondary_window,key)
             name.grid(row=row_c,column=0)
             shortcut.grid(row=row_c,column=1)
-            row_list.append([name,shortcut])
+            self.row_list.append([name,shortcut,var])
             row_c += 1
         
         save_button = tk.Button(master=secondary_window,text="Save",command=self.save)
@@ -411,16 +416,26 @@ class Gui(tk.Tk):
         reset_button.grid(row=row_c,column=1)
 
     def save(self):
-        pass
+        for shorcut in self.row_list:
+            self.shortcuts_dict_new[shorcut[0].cget("text")] = shorcut[2].get()
+
+        with open("user_shortcuts.json","w") as FW:
+            FW.write(json.dumps(self.shortcuts_dict_new,indent=1))
+        self.shortcuts_dict = self.shortcuts_dict_new.copy()
 
     def reset(self):
-        pass
+        self.load_shortcuts(False)
+        with open("user_shortcuts.json","w") as FW:
+            FW.write(json.dumps(self.shortcuts_dict,indent=1))
+        for shorcut in self.row_list:
+            shorcut[2].set(self.shortcuts_dict[shorcut[0].cget("text")])
 
     def get_shortcuts_line(self,master,key):
         name = tk.Label(master=master,text=key)
-        shortcut = tk.Entry(master=master)
+        var = tk.StringVar(master=master)
+        shortcut = tk.Entry(master=master,textvariable=var)
         shortcut.insert(0,self.shortcuts_dict[key])
-        return name,shortcut
+        return name,shortcut,var
 
         
     def load_shortcuts(self,original:bool):

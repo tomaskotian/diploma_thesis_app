@@ -1,5 +1,5 @@
 {
-    "stop":"enter",
+    "stop":"Return",
     "LED automatic":"m",
     "LED intesity plus":"p",
     "LED intesity minus":"l",
@@ -13,9 +13,9 @@
     "step plus":"up",
     "step minus":"down",
     "rotate right":"q",
+    "rotate left":"e",
     "table forward":"w",
-    "table left":"e",
-    "table plus":"a",
+    "table left":"a",
     "table backward":"s",
     "table right":"d",
     "probe up":"r",
