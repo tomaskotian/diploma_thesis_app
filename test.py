@@ -1,15 +1,13 @@
-import tkinter as tk
+from tkinter import *
 
-app = tk.Tk()
+root = Tk() 
+root.geometry("300x200") 
 
-def click(event):
-    print(var.get())
+w = Label(root, text ='GeeksForGeeks', font = "50") 
+w.pack() 
+	
+msg = Message( root, text = "A computer science portal for geeks",bg="white") 
+	
+msg.pack() 
 
-var = tk.StringVar()
-ent = tk.Entry(app,textvariable=var)
-ent.pack(side='right')
-app.bind("<Button-1>",click)
-
-
-
-app.mainloop()
+root.mainloop() 

@@ -15,7 +15,7 @@
  "rotate right": "q",
  "rotate left": "e",
  "table forward": "w",
- "table plus": "a",
+ "table left": "a",
  "table backward": "s",
  "table right": "d",
  "probe up": "r",
