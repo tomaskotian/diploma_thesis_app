@@ -44,11 +44,6 @@ class TMCLcmd:
         pitch = 5
         if(motor == 3):
             pitch = 10
-
-        # if(self.unit == "mm"):
-        #     distance_step = pitch/50000
-        # elif(self.unit == "um"):
-        #     distance_step = (pitch*1000)/50000
         distance_step = (pitch*1000)/50000
 
 
@@ -164,8 +159,7 @@ class TMCLcmd:
             self.actual_positions[motor] = self._steps2distance(motor=motor,steps=self.ser.reply.value_32b) 
     
     def ignore_cmd(self,motor):
-        self.ref_search(type_n=2,motor=motor) 
-        # print(self.ser.reply.value_32b)
+        self.ref_search(type_n=2,motor=motor)
         if(self.ser.reply.value_32b != 0): # status if 0 finished search
             return True
         
@@ -174,14 +168,6 @@ class TMCLcmd:
             return True
         
         return False
-        
-# com = TMCLcmd()
-# com.find_all_references()
-
-# for i in range(10):
-#     com.get_actual_positions()
-#     print(com.actual_positions)
-#     time.sleep(1)
 
 
 

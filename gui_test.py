@@ -61,25 +61,25 @@ class Gui(tk.Tk):
         self.bind("<MouseWheel>",self.wheel)
         self.bind("<Button-3>",self.change_unit)
 
-        self.sidebar_frame = tk.Frame(self,bg="grey",padx=10,pady=10)
+        self.sidebar_frame = tk.Frame(self,padx=10,pady=10,bg="#383838")
         self.sidebar_frame.grid(row=0,column=0,rowspan=2,sticky="nsew")
         self.sidebar_frame.grid_rowconfigure((0,1,2,3,4,5,6,7,8,9),weight=1)
 
-        self.camera_frame = tk.Frame(self,bg="green",padx=200,pady=20)
+        self.camera_frame = tk.Frame(self,padx=200,pady=20,bg="#8A8A8A")
         self.camera_frame.grid(row=0,column=1,sticky="nsew")
 
-        self.downbar_frame = tk.Frame(self,bg="red",padx=10,pady=5)
+        self.downbar_frame = tk.Frame(self,padx=10,pady=5)
         self.downbar_frame.grid(row=1,column=1,rowspan=1,sticky="nsew")
         self.downbar_frame.grid_columnconfigure((0,1),weight=1)
 
         self.var_tmcm = tk.StringVar(self.sidebar_frame,self.tmcm.connection)
         self.tmcm_options = tk.OptionMenu(self.sidebar_frame,self.var_tmcm,*self.tmcm_ports,command=self.connect_tmcm)
-        self.tmcm_options.config(width=10)
+        self.tmcm_options.config(width=15)
         self.tmcm_options.grid(row=0,column=0,padx=5)
 
         self.var_cam = tk.StringVar(self.sidebar_frame,'0')
         self.cam_options = tk.OptionMenu(self.sidebar_frame,self.var_cam,*cam_ports,command=self.connect_cam)
-        self.cam_options.config(width=10)
+        self.cam_options.config(width=15)
         self.cam_options.grid(row=0,column=1,padx=5)
 
         self.video_capture = None
@@ -89,10 +89,10 @@ class Gui(tk.Tk):
         self.stop_button = tk.Button(self.sidebar_frame,text=f"STOP <{self.shortcuts_dict['stop']}>",bg="red",width=30,height=4,command=self.stop_tmcm)
         self.stop_button.grid(row=1,column=0,columnspan=2,padx=5,pady=5)
 
-        self.position_frame = tk.Frame(self.sidebar_frame,bg="white")
+        self.position_frame = tk.Frame(self.sidebar_frame)
         self.position_frame.grid(row=2,column=0,columnspan=2,sticky="nsew")
 
-        self.position_label = tk.Label(self.position_frame,text="Positions")
+        self.position_label = tk.Label(self.position_frame,text="Positions",bg="#8A8A8A")
         self.position_label.grid(row=0,column=0,columnspan=3,sticky="nsew")
 
         self.position_x = tk.Label(self.position_frame,text="axis X",width=10)
@@ -100,40 +100,40 @@ class Gui(tk.Tk):
         self.position_x_val = tk.Label(self.position_frame,text="0",width=20)
         self.position_x_val.grid(row=1,column=1)
         self.position_x_unit = tk.Label(self.position_frame,text="um",width=10)
-        self.position_x_unit.grid(row=1,column=2)
+        self.position_x_unit.grid(row=1,column=2,sticky="nsew")
 
         self.position_y = tk.Label(self.position_frame,text="axis Y",width=10)
         self.position_y.grid(row=2,column=0)
         self.position_y_val = tk.Label(self.position_frame,text="0",width=20)
         self.position_y_val.grid(row=2,column=1)
         self.position_y_unit = tk.Label(self.position_frame,text="um",width=10)
-        self.position_y_unit.grid(row=2,column=2)
+        self.position_y_unit.grid(row=2,column=2,sticky="nsew")
 
         self.position_cam_z = tk.Label(self.position_frame,text="camera Z",width=10)
         self.position_cam_z.grid(row=3,column=0)
         self.position_cam_z_val = tk.Label(self.position_frame,text="0",width=20)
         self.position_cam_z_val.grid(row=3,column=1)
         self.position_cam_z_unit = tk.Label(self.position_frame,text="um",width=10)
-        self.position_cam_z_unit.grid(row=3,column=2)
+        self.position_cam_z_unit.grid(row=3,column=2,sticky="nsew")
 
         self.position_probe_z = tk.Label(self.position_frame,text="probe Z",width=10)
         self.position_probe_z.grid(row=4,column=0)
         self.position_probe_z_val = tk.Label(self.position_frame,text="0",width=20)
         self.position_probe_z_val.grid(row=4,column=1)
         self.position_probe_z_unit = tk.Label(self.position_frame,text="um",width=10)
-        self.position_probe_z_unit.grid(row=4,column=2)
+        self.position_probe_z_unit.grid(row=4,column=2,sticky="nsew")
 
         self.position_table_angle = tk.Label(self.position_frame,text="table angle",width=10)
         self.position_table_angle.grid(row=5,column=0)
         self.position_table_angle_val = tk.Label(self.position_frame,text="0",width=20)
         self.position_table_angle_val.grid(row=5,column=1)
         self.position_table_angle_unit = tk.Label(self.position_frame,text="°",width=10)
-        self.position_table_angle_unit.grid(row=5,column=2)
+        self.position_table_angle_unit.grid(row=5,column=2,sticky="nsew")
 
-        self.led_frame = tk.Frame(self.sidebar_frame,bg="green")
+        self.led_frame = tk.Frame(self.sidebar_frame)
         self.led_frame.grid(row=3,column=0,columnspan=2,sticky="nsew",pady=10)
 
-        self.led_label = tk.Label(self.led_frame,text="Led intensity")
+        self.led_label = tk.Label(self.led_frame,text="Led intensity",bg="#8A8A8A")
         self.led_label.grid(row=0,column=0,sticky="nsew")
 
         self.intesity_led_var = tk.IntVar(self.led_frame)
@@ -151,10 +151,10 @@ class Gui(tk.Tk):
         self.led_auto.grid(row=0,column=1,padx=5)
         self.led_auto.select()
 
-        self.camera_setting_frame = tk.Frame(self.sidebar_frame,bg="yellow")
+        self.camera_setting_frame = tk.Frame(self.sidebar_frame)
         self.camera_setting_frame.grid(row=4,column=0,columnspan=2,sticky="nsew")
 
-        self.camera_label = tk.Label(self.camera_setting_frame,text="Camera settings")
+        self.camera_label = tk.Label(self.camera_setting_frame,text="Camera settings",bg="#8A8A8A")
         self.camera_label.grid(row=0,column=0,columnspan=4,sticky="nsew")
 
         self.camera_mag_var = tk.DoubleVar(self.camera_setting_frame,0.7) 
@@ -182,7 +182,7 @@ class Gui(tk.Tk):
         self.camera_auto = tk.Checkbutton(self.camera_setting_frame,text=f"Automatic focus <{self.shortcuts_dict['camera automatic focus']}>",variable=self.camera_focus_var)
         self.camera_auto.grid(row=3,column=2,rowspan=2,padx=5)
 
-        self.step_frame = tk.Frame(self.sidebar_frame,bg="red")
+        self.step_frame = tk.Frame(self.sidebar_frame)
         self.step_frame.grid(row=6,column=0,columnspan=2,sticky="nsew",pady=10)
 
         self.step_um = tk.Checkbutton(self.step_frame,text=f"um <{self.shortcuts_dict['step um']}>",command=self.set_step_um)
@@ -202,10 +202,10 @@ class Gui(tk.Tk):
         self.step_m.grid(row=2,column=1,sticky="e")
 
 
-        self.joystick_frame = tk.Frame(self.sidebar_frame,bg="blue")
+        self.joystick_frame = tk.Frame(self.sidebar_frame)
         self.joystick_frame.grid(row=7,column=0,columnspan=3,sticky="nsew",pady=10)
 
-        self.joystick_table = tk.Label(self.joystick_frame,text="Table")
+        self.joystick_table = tk.Label(self.joystick_frame,text="Table",bg="#8A8A8A")
         self.joystick_table.grid(row=0,column=0,columnspan=3,sticky="nsew")
 
         self.table_r = tk.Button(self.joystick_frame,text=f"r <{self.shortcuts_dict['rotate right']}>",command=self.rotate_right)
@@ -250,16 +250,16 @@ class Gui(tk.Tk):
         self.function_click_move = tk.Checkbutton(self.function_frame,variable=self.function_click_move_var,text=f"Click and move <{self.shortcuts_dict['click and move']}>")
         self.function_click_move.grid(column=3,row=0)
 
-        self.messages = tk.Message(self.function_frame,text="hello\n\n\n\n",bg="white",anchor="e")
+        self.messages = tk.Message(self.function_frame,text="hello\n\n\n\n",anchor="e",bg="white")
         self.messages.grid(row=1,column=0,columnspan=4,pady=5,padx=5,sticky="nswe")
 
 
-        self.find_chip_frame = tk.Frame(self.downbar_frame,bg="blue")
+        self.find_chip_frame = tk.Frame(self.downbar_frame)
         self.find_chip_frame.grid(column=1,row=0,padx=5,pady=5,sticky="nsew")
         self.find_chip_frame.grid_columnconfigure(1,weight=1)
 
         self.find_chip_var = tk.BooleanVar(self.find_chip_frame,False)
-        self.function_find_chip = tk.Checkbutton(self.find_chip_frame,variable=self.find_chip_var,text=f"Find chip <{self.shortcuts_dict['find chip']}>")
+        self.function_find_chip = tk.Checkbutton(self.find_chip_frame,variable=self.find_chip_var,text=f"Find chip <{self.shortcuts_dict['find chip']}>",bg="#8A8A8A")
         self.function_find_chip.grid(column=0,row=0,columnspan=2,sticky="nsew")
 
         self.th1_l = tk .Label(self.find_chip_frame,text="th1")

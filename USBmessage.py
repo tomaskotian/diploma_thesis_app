@@ -1,15 +1,4 @@
 import serial.tools.list_ports
-import logging
-import datetime
-
-DEBUG = True
-
-def _get_logfile_name():
-    today_date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    return f"logs/log_{today_date}.log"
-
-logging.basicConfig(filename=_get_logfile_name(),format='%(asctime)s %(levelname)s - %(name)s - %(funcName)s - %(message)s',level=logging.INFO)
-logging.disable()
 
 class Message_tx:
     def __init__(self, address:bytes, cmd_n:bytes, type_n:bytes, motor_bank:bytes, value_32b:int):
@@ -48,7 +37,6 @@ class Message_rx:
 
 class Serial_comunication:
     def __init__(self):
-
         self.ports_dict = {}
         self.error = {}
         self.reply = Message_rx([0,0,0,0,0,0,0,0,0])
@@ -56,23 +44,18 @@ class Serial_comunication:
         self.find_ports()
 
     def find_ports(self):
-        try:       
-            com_ports = serial.tools.list_ports.comports()
-            self.ports_dict = {com.name: com.serial_number for com in com_ports}
-        except Exception as e:
-            logging.error(e)
+        com_ports = serial.tools.list_ports.comports()
+        self.ports_dict = {com.name: com.serial_number for com in com_ports}
 
     def connect(self,port:str, baudrate:int):
         try:
             self.ser = serial.Serial(port=port, baudrate=baudrate)
         except Exception as e:
             print(f"Could not connect to port {port}")
-            logging.error(e)
 
     def send(self, message:Message_tx):
         self.error.clear()
         try:
-            # print(message.tmcl_cmd)
             self.ser.write(bytes(message.tmcl_cmd))
             self.reply = self.read()
             if(self.is_reply_error(message,self.reply)):
@@ -81,14 +64,10 @@ class Serial_comunication:
             self.error["Send/read"] = "Could not send or read message"
 
     def read(self) -> Message_rx:
-        try:
-            if(self.ser.readable()):
-                read_message = list(self.ser.read(9))
-                logging.info(f"RX TMCL reply: {read_message}")
-                return Message_rx(read_message)
-            return Message_rx([])
-        except Exception as e:
-            logging.error(e)
+        if(self.ser.readable()):
+            read_message = list(self.ser.read(9))
+            return Message_rx(read_message)
+        return Message_rx([])
 
     status_code = { 100:  "OK",
                     101:  "Loaded into EEPROM",
@@ -103,24 +82,4 @@ class Serial_comunication:
         if(message_rx.status == 100 and message_rx.cmd_n == message_tx.cmd_n):
             return False
         else:
-            try:
-                logging.error(self.status_code[message_rx.status])
-            except Exception as e:
-                logging.error(e)
             return True
-        
-    if(DEBUG):
-        def print_usb_devices(self):
-            ports = serial.tools.list_ports.comports()
-            if ports:
-                print("USB Devices:")
-                for port in ports:
-                    print(f" - {port.device}: {port.description}")
-
-
-# ser = Serial_comunication()
-# ser.connect("COM8",9600)
-# ser.send(Message_tx(0,5,4,0,10))
-# print(ser.read().tmcl_cmd)
-# ser.send(Message_tx(1,5,4,0,50))
-# print(ser.read().tmcl_cmd)
