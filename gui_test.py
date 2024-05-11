@@ -79,7 +79,7 @@ class Gui(tk.Tk):
 
         self.var_cam = tk.StringVar(self.sidebar_frame,'0')
         self.cam_options = tk.OptionMenu(self.sidebar_frame,self.var_cam,*cam_ports,command=self.connect_cam)
-        self.cam_options.config(width=15)
+        self.cam_options.config(width=10)
         self.cam_options.grid(row=0,column=1,padx=5)
 
         self.video_capture = None
@@ -87,10 +87,10 @@ class Gui(tk.Tk):
         
 
         self.stop_button = tk.Button(self.sidebar_frame,text=f"STOP <{self.shortcuts_dict['stop']}>",bg="red",width=30,height=4,command=self.stop_tmcm)
-        self.stop_button.grid(row=1,column=0,columnspan=2,padx=5,pady=5)
+        self.stop_button.grid(row=1,column=0,columnspan=2,padx=5,pady=5,sticky="nsew")
 
         self.position_frame = tk.Frame(self.sidebar_frame)
-        self.position_frame.grid(row=2,column=0,columnspan=2,sticky="nsew")
+        self.position_frame.grid(row=2,column=0,columnspan=2)
 
         self.position_label = tk.Label(self.position_frame,text="Positions",bg="#8A8A8A")
         self.position_label.grid(row=0,column=0,columnspan=3,sticky="nsew")
@@ -155,7 +155,7 @@ class Gui(tk.Tk):
         self.camera_setting_frame.grid(row=4,column=0,columnspan=2,sticky="nsew")
 
         self.camera_label = tk.Label(self.camera_setting_frame,text="Camera settings",bg="#8A8A8A")
-        self.camera_label.grid(row=0,column=0,columnspan=4,sticky="nsew")
+        self.camera_label.grid(row=0,column=0,columnspan=6,sticky="nsew")
 
         self.camera_mag_var = tk.DoubleVar(self.camera_setting_frame,0.7) 
         self.camera_mag = tk.Scale(self.camera_setting_frame,variable=self.camera_mag_var, from_=0.7, to=5.6, resolution=0.1, orient=tk.HORIZONTAL)
@@ -175,8 +175,10 @@ class Gui(tk.Tk):
         self.camera_down = tk.Button(self.camera_setting_frame,text=f"down <{self.shortcuts_dict['camera down']}>",command=self.move_camera_down)
         self.camera_down.grid(row=4,column=0)
 
-        self.camera_canvas = tk.Canvas(self.camera_setting_frame,width=50,height=50)
+        self.camera_canvas = tk.Canvas(self.camera_setting_frame,width=50,height=50,)
         self.camera_canvas.grid(row=3,column=1,rowspan=2)
+        self.img_cam = tk.PhotoImage(file="D:/skola/Ing/Dimplomka/SW/diploma_thesis_app/icons/camera.png")
+        self.camera_canvas.create_image(0,0,image=self.img_cam,anchor="nw")
 
         self.camera_focus_var = tk.BooleanVar(self.camera_setting_frame,value=True)
         self.camera_auto = tk.Checkbutton(self.camera_setting_frame,text=f"Automatic focus <{self.shortcuts_dict['camera automatic focus']}>",variable=self.camera_focus_var)
@@ -206,7 +208,7 @@ class Gui(tk.Tk):
         self.joystick_frame.grid(row=7,column=0,columnspan=3,sticky="nsew",pady=10)
 
         self.joystick_table = tk.Label(self.joystick_frame,text="Table",bg="#8A8A8A")
-        self.joystick_table.grid(row=0,column=0,columnspan=3,sticky="nsew")
+        self.joystick_table.grid(row=0,column=0,columnspan=4,sticky="nsew")
 
         self.table_r = tk.Button(self.joystick_frame,text=f"r <{self.shortcuts_dict['rotate right']}>",command=self.rotate_right)
         self.table_r.grid(row=1,column=0)
@@ -225,12 +227,16 @@ class Gui(tk.Tk):
         
         self.table_canvas = tk.Canvas(self.joystick_frame,width=50,height=50)
         self.table_canvas.grid(row=2,column=1)
+        self.img_table = tk.PhotoImage(file="D:/skola/Ing/Dimplomka/SW/diploma_thesis_app/icons/table.png")
+        self.table_canvas.create_image(0,0,image=self.img_table,anchor="nw")
 
         self.table_right = tk.Button(self.joystick_frame,text=f"right <{self.shortcuts_dict['table right']}>",command=self.move_y_minus)
         self.table_right.grid(row=2,column=2)
 
         self.probe_canvas = tk.Canvas(self.joystick_frame,width=50,height=50)
         self.probe_canvas.grid(row=2,column=3)
+        self.img_probe = tk.PhotoImage(file="D:/skola/Ing/Dimplomka/SW/diploma_thesis_app/icons/probe_head.png")
+        self.probe_canvas.create_image(0,0,image=self.img_probe,anchor="nw")
 
         self.table_down = tk.Button(self.joystick_frame,text=f"down <{self.shortcuts_dict['table backward']}>",command=self.move_x_minus)
         self.table_down.grid(row=3,column=1)
@@ -706,7 +712,7 @@ class Gui(tk.Tk):
         elif(motor == 2):
             return self.is_distance_ok(target=distance,max_distance=70000) 
         elif(motor == 3):
-            return self.is_distance_ok(target=distance,max_distance=50000) 
+            return self.is_distance_ok(target=distance,max_distance=60000) 
         elif(motor == 5):
             return self.is_distance_ok(target=distance,max_distance=270) 
         

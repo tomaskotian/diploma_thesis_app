@@ -1,5 +1,4 @@
 import USBmessage as usb
-import time
 
 class TMCLcmd:
     def __init__(self):
@@ -44,7 +43,7 @@ class TMCLcmd:
         pitch = 5
         if(motor == 3):
             pitch = 10
-        distance_step = (pitch*1000)/50000
+        distance_step = (pitch*1000)/51200
 
 
         if(motor == 4):
@@ -64,7 +63,7 @@ class TMCLcmd:
         if(motor == 3):
             pitch = 10
         
-        distance_step = (pitch*1000)/50000
+        distance_step = (pitch*1000)/51200
 
         if(motor == 4):
             # motor 4  270deg = 393750 steps 1deg  = 1458.33 steps
@@ -120,8 +119,10 @@ class TMCLcmd:
         for motor in range(4):
             self.set_param(type_n=4,motor=motor,value_32b=1000)     # maximum speed positioning in eeprom
             self.set_param(type_n=5,motor=motor,value_32b=500)      # maximum acceleration positioning in eeprom
-            self.set_param(type_n=6,motor=motor,value_32b=150)      # maximum current for motor    
+            self.set_param(type_n=6,motor=motor,value_32b=150)      # maximum current for motor   
             self.set_param(type_n=7,motor=motor,value_32b=10)       # standby current for motor
+            if(motor == 3):
+                self.set_param(type_n=7,motor=motor,value_32b=100) 
             self.set_param(type_n=13,motor=motor,value_32b=0)       # aktivation left end switch
             self.set_param(type_n=140,motor=motor,value_32b=8)      # microsteps resolution 8=256
             self.set_param(type_n=153,motor=motor,value_32b=7)      # ramp divisor 
