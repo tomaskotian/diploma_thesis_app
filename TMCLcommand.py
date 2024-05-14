@@ -117,23 +117,24 @@ class TMCLcmd:
 
     def set_motor_parametres(self):
         for motor in range(4):
-            self.set_param(type_n=4,motor=motor,value_32b=1000)     # maximum speed positioning in eeprom
-            self.set_param(type_n=5,motor=motor,value_32b=500)      # maximum acceleration positioning in eeprom
+            self.set_param(type_n=4,motor=motor,value_32b=1677)     # maximum speed positioning in eeprom
+            self.set_param(type_n=5,motor=motor,value_32b=200)      # maximum acceleration positioning in eeprom
             self.set_param(type_n=6,motor=motor,value_32b=150)      # maximum current for motor   
             self.set_param(type_n=7,motor=motor,value_32b=10)       # standby current for motor
             if(motor == 3):
-                self.set_param(type_n=7,motor=motor,value_32b=100) 
+                self.set_param(type_n=4,motor=motor,value_32b=419)  # maximum speed positioning in eeprom
+                self.set_param(type_n=7,motor=motor,value_32b=100)  # standby current for motor
             self.set_param(type_n=13,motor=motor,value_32b=0)       # aktivation left end switch
             self.set_param(type_n=140,motor=motor,value_32b=8)      # microsteps resolution 8=256
             self.set_param(type_n=153,motor=motor,value_32b=7)      # ramp divisor 
             self.set_param(type_n=154,motor=motor,value_32b=2)      # pulse divisor 
             self.set_param(type_n=193,motor=motor,value_32b=1)      # reference search mode
-            self.set_param(type_n=194,motor=motor,value_32b=1000)   # reference search speed 
+            self.set_param(type_n=194,motor=motor,value_32b=1677)   # reference search speed 
             self.set_param(type_n=195,motor=motor,value_32b=100)    # reference search switch speed
             self.set_param(type_n=214,motor=motor,value_32b=10)     # delay after command in 10ms
             
         for motor in range(4,6):
-            self.set_param(type_n=4,motor=motor,value_32b=1000)     # maximum speed positioning in eeprom
+            self.set_param(type_n=4,motor=motor,value_32b=2000)     # maximum speed positioning in eeprom
             self.set_param(type_n=5,motor=motor,value_32b=500)      # maximum acceleration positioning in eeprom
             self.set_param(type_n=6,motor=motor,value_32b=10)       # maximum current for motor    
             self.set_param(type_n=7,motor=motor,value_32b=1)        # standby current for motor
@@ -142,7 +143,7 @@ class TMCLcmd:
             self.set_param(type_n=153,motor=motor,value_32b=7)      # ramp divisor 
             self.set_param(type_n=154,motor=motor,value_32b=2)      # pulse divisor 
             self.set_param(type_n=193,motor=motor,value_32b=1)      # reference search mode
-            self.set_param(type_n=194,motor=motor,value_32b=1500)   # reference search speed
+            self.set_param(type_n=194,motor=motor,value_32b=2000)   # reference search speed
             self.set_param(type_n=195,motor=motor,value_32b=100)    # reference search switch speed
             self.set_param(type_n=214,motor=motor,value_32b=10)     # delay after command in 10ms
 

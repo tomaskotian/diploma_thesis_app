@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import scrolledtext
 import cv2
 from PIL import Image,ImageTk
 import TMCLcommand as tmc
@@ -287,7 +286,8 @@ class Gui(tk.Tk):
         self.th3 = tk.Scale(self.find_chip_frame,variable=self.th3_var, from_=0, to=100000,resolution=4,length=300, orient=tk.HORIZONTAL)
         self.th3.grid(row=4,column=1,sticky="nswe",pady=5,padx=5)
 
-        self.find_param = tk.Checkbutton(self.find_chip_frame,text="Fixed parametres")
+        self.find_param_var = tk.BooleanVar(self.find_chip_frame)
+        self.find_param = tk.Checkbutton(self.find_chip_frame,text="Fixed parametres",variable=self.find_param_var,command=self.toogle_find_param)
         self.find_param.grid(row=1,column=0,padx=5,pady=5,sticky="nswe")
         self.find_param.select()
         
@@ -299,13 +299,27 @@ class Gui(tk.Tk):
             self.connect_cam(0)
         if(self.video_capture != None):
             self.update_webcam()
-        
+            
+        self.toogle_find_param()
         self.update_positon()
         self.timer_100ms()
         self.timer_20ms()
 
 
 #----------------------------------------------------------------------------------------------------
+    def toogle_find_param(self):
+        if(self.find_param_var.get()):
+            self.th1.configure(state=tk.DISABLED)
+            self.th2.configure(state=tk.DISABLED)
+            self.th3.configure(state=tk.DISABLED)
+            
+        else:
+            self.th1.configure(state=tk.NORMAL)
+            self.th2.configure(state=tk.NORMAL)
+            self.th3.configure(state=tk.NORMAL)
+            
+        
+    
     def wheel(self,event):
         if(event.delta == -120):
             self.step_var.set(self.step_var.get()+1)
@@ -710,9 +724,9 @@ class Gui(tk.Tk):
         elif(motor == 1):
             return self.is_distance_ok(target=distance,max_distance=86000) 
         elif(motor == 2):
-            return self.is_distance_ok(target=distance,max_distance=70000) 
+            return self.is_distance_ok(target=distance,max_distance=45000) 
         elif(motor == 3):
-            return self.is_distance_ok(target=distance,max_distance=60000) 
+            return self.is_distance_ok(target=distance,max_distance=53000) 
         elif(motor == 5):
             return self.is_distance_ok(target=distance,max_distance=270) 
         
