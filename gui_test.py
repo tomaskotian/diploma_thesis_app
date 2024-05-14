@@ -48,7 +48,6 @@ class Gui(tk.Tk):
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
         self.geometry(f"{self.screen_width}x{self.screen_height}+0+0")
-        # self.geometry(f"{1100}x{580}")
         self.state('zoomed') 
 
         self.grid_columnconfigure(0, weight=1)
@@ -267,20 +266,20 @@ class Gui(tk.Tk):
         self.function_find_chip = tk.Checkbutton(self.find_chip_frame,variable=self.find_chip_var,text=f"Find chip <{self.shortcuts_dict['find chip']}>",bg="#8A8A8A")
         self.function_find_chip.grid(column=0,row=0,columnspan=2,sticky="nsew")
 
-        self.th1_l = tk .Label(self.find_chip_frame,text="th1")
+        self.th1_l = tk .Label(self.find_chip_frame,text="min. gradient")
         self.th1_l.grid(row=2,column=0)
         self.th1_var = tk.IntVar(self.find_chip_frame,120)
         self.th1 = tk.Scale(self.find_chip_frame,variable=self.th1_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
         self.th1.grid(row=2,column=1,sticky="nswe",pady=5,padx=5)
         
-        self.th2_l = tk .Label(self.find_chip_frame,text="th2")
+        self.th2_l = tk .Label(self.find_chip_frame,text="max. gradient")
         self.th2_l.grid(row=3,column=0)
         self.th2_var = tk.IntVar(self.find_chip_frame,100)
         self.th2 = tk.Scale(self.find_chip_frame,variable=self.th2_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
         self.th2.grid(row=3,column=1,sticky="nswe",pady=5,padx=5)
     
 
-        self.th3_l = tk .Label(self.find_chip_frame,text="th3")
+        self.th3_l = tk .Label(self.find_chip_frame,text="min. area")
         self.th3_l.grid(row=4,column=0)
         self.th3_var = tk.IntVar(self.find_chip_frame,2000)
         self.th3 = tk.Scale(self.find_chip_frame,variable=self.th3_var, from_=0, to=100000,resolution=4,length=300, orient=tk.HORIZONTAL)
@@ -299,7 +298,7 @@ class Gui(tk.Tk):
             self.connect_cam(0)
         if(self.video_capture != None):
             self.update_webcam()
-            
+
         self.toogle_find_param()
         self.update_positon()
         self.timer_100ms()
@@ -318,8 +317,6 @@ class Gui(tk.Tk):
             self.th2.configure(state=tk.NORMAL)
             self.th3.configure(state=tk.NORMAL)
             
-        
-    
     def wheel(self,event):
         if(event.delta == -120):
             self.step_var.set(self.step_var.get()+1)
@@ -390,6 +387,24 @@ class Gui(tk.Tk):
             self.move_probe_up()
         elif(event.keysym == self.shortcuts_dict["probe down"]):
             self.move_probe_down()
+        elif(event.keysym == self.shortcuts_dict["home"]):
+            self.find_home()
+        elif(event.keysym == self.shortcuts_dict["center"]):
+            self.find_center()
+        elif(event.keysym == self.shortcuts_dict["center chip"]):
+            self.center_chip()
+        elif(event.keysym == self.shortcuts_dict["click and move"]):
+            if(self.function_click_move_var.get()):
+                self.function_click_move_var.set(False)
+            else:
+                self.function_click_move_var.set(True)
+        elif(event.keysym == self.shortcuts_dict["find chip"]):
+            if(self.find_chip_var.get()):
+                self.find_chip_var.set(False)
+            else:
+                self.find_chip_var.set(True)
+            
+        
 
     
     def timer_20ms(self):
@@ -697,13 +712,8 @@ class Gui(tk.Tk):
                 cv2.drawContours(imgConters,cnt,-1,(255,0,255),7)
                 peri = cv2.arcLength(cnt,True)
                 approx =  cv2.approxPolyDP(cnt,0.02*peri,True)
-                # print(approx)
                 x,y,w,h = cv2.boundingRect(approx)
                 self.chip_size_pixel = [x,y,w,h]
-                # print(f"{x} {y}")
-                # print(approx.item((0,0,0)))
-                # print("----")
-                # print(f"{x},{y},{w},{h}")
                 cv2.rectangle(imgConters,(x,y),(x+w,y+h),(0,255,0),5)
 
     def update_positon(self):
