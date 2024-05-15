@@ -254,7 +254,7 @@ class Gui(tk.Tk):
         self.function_click_move = tk.Checkbutton(self.function_frame,variable=self.function_click_move_var,text=f"Click and move <{self.shortcuts_dict['click and move']}>")
         self.function_click_move.grid(column=3,row=0)
 
-        self.messages = tk.Message(self.function_frame,text="hello\n\n\n\n",anchor="e",bg="white")
+        self.messages = tk.Message(self.function_frame,text="",anchor="e",bg="white",aspect=20000)
         self.messages.grid(row=1,column=0,columnspan=4,pady=5,padx=5,sticky="nswe")
 
 
@@ -415,6 +415,19 @@ class Gui(tk.Tk):
             self.led_intensity_var += 1
             if(self.led_intensity_var >=26):
                 self.led_intensity_var = 0
+        
+        if(len(self.tmcm.erros_list)):
+            print(self.tmcm.erros_list)
+            new_text = ""
+            try:
+                for err in self.tmcm.erros_list:
+                    new_text += str(err) + '\n'
+            except:
+                pass
+            print(new_text)
+            self.tmcm.erros_list.clear()
+            self.messages.configure(text=new_text)
+
 
         self.after(15,self.timer_20ms)    
 
