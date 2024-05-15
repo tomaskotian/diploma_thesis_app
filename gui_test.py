@@ -278,7 +278,6 @@ class Gui(tk.Tk):
         self.th2 = tk.Scale(self.find_chip_frame,variable=self.th2_var, from_=0, to=255,resolution=4,length=300, orient=tk.HORIZONTAL)
         self.th2.grid(row=3,column=1,sticky="nswe",pady=5,padx=5)
     
-
         self.th3_l = tk .Label(self.find_chip_frame,text="min. area")
         self.th3_l.grid(row=4,column=0)
         self.th3_var = tk.IntVar(self.find_chip_frame,2000)
@@ -403,9 +402,6 @@ class Gui(tk.Tk):
                 self.find_chip_var.set(False)
             else:
                 self.find_chip_var.set(True)
-            
-        
-
     
     def timer_20ms(self):
         if(self.led_auto_var.get()):
@@ -520,6 +516,7 @@ class Gui(tk.Tk):
     def find_center(self):
         self.tmcm.move_to_abs(0,41300)
         self.tmcm.move_to_abs(1,48800)
+        self.tmcm.move_to_abs(5,185)
 
     def set_step_um(self):
         self.tmcm.unit = "um"

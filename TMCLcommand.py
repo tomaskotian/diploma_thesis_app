@@ -19,7 +19,7 @@ class TMCLcmd:
                 break
         
         if(self.connection == None):
-            print("Autoconnect cannot found TMCM-6110")
+            self.erros_list.append({"connection":"Autoconnect failed cannot found TMCM-6110"})
             return
         self.set_motor_parametres()
         

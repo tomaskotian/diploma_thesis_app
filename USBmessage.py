@@ -51,7 +51,7 @@ class Serial_comunication:
         try:
             self.ser = serial.Serial(port=port, baudrate=baudrate)
         except Exception as e:
-            print(f"Could not connect to port {port}")
+            self.error["connection"] = "Could not connect"
 
     def send(self, message:Message_tx):
         self.error.clear()
