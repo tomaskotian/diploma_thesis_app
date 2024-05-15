@@ -1,5 +1,5 @@
 """
-File: cam_values.py
+File: CamValues.py
 Author: Tomas Kotian
 Date: 15.5.2024
 Description: Values for camera focus and magnification

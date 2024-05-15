@@ -4,7 +4,7 @@ Author: Tomas Kotian
 Date: 15.5.2024
 Description: Basic commands fo control TMCM-6110
 """
-import USBmessage as usb
+import libs.USBmessage as usb
 
 class TMCLcmd:
     def __init__(self):

@@ -8,11 +8,11 @@ Description: Main file for application for Semiconductor chip testing machine
 import tkinter as tk
 import cv2
 from PIL import Image, ImageTk
-import TMCLcommand as tmc
+import libs.TMCLcommand as tmc
 import time
 import numpy as np
 import json
-import cam_values as cam
+import libs.CamValues as cam
 
 
 class Gui(tk.Tk, cam.Cam_values):
@@ -275,7 +275,7 @@ class Gui(tk.Tk, cam.Cam_values):
         )
         self.camera_canvas.grid(row=3, column=1, rowspan=2)
         self.img_cam = tk.PhotoImage(
-            file="D:/skola/Ing/Dimplomka/SW/diploma_thesis_app/icons/camera.png"
+            file="sources/icons/camera.png"
         )
         self.camera_canvas.create_image(0, 0, image=self.img_cam, anchor="nw")
 
@@ -366,7 +366,7 @@ class Gui(tk.Tk, cam.Cam_values):
         self.table_canvas = tk.Canvas(self.joystick_frame, width=50, height=50)
         self.table_canvas.grid(row=2, column=1)
         self.img_table = tk.PhotoImage(
-            file="D:/skola/Ing/Dimplomka/SW/diploma_thesis_app/icons/table.png"
+            file="sources/icons/table.png"
         )
         self.table_canvas.create_image(0, 0, image=self.img_table, anchor="nw")
 
@@ -381,7 +381,7 @@ class Gui(tk.Tk, cam.Cam_values):
         self.probe_canvas = tk.Canvas(self.joystick_frame, width=50, height=50)
         self.probe_canvas.grid(row=2, column=3)
         self.img_probe = tk.PhotoImage(
-            file="D:/skola/Ing/Dimplomka/SW/diploma_thesis_app/icons/probe_head.png"
+            file="sources/icons/probe_head.png"
         )
         self.probe_canvas.create_image(0, 0, image=self.img_probe, anchor="nw")
 
@@ -749,7 +749,7 @@ class Gui(tk.Tk, cam.Cam_values):
         for shorcut in self.row_list:
             self.shortcuts_dict_new[shorcut[0].cget("text")] = shorcut[2].get()
 
-        with open("user_shortcuts.json", "w") as FW:
+        with open("sources/user/user_shortcuts.json", "w") as FW:
             FW.write(json.dumps(self.shortcuts_dict_new, indent=1))
         self.shortcuts_dict = self.shortcuts_dict_new.copy()
 
@@ -758,7 +758,7 @@ class Gui(tk.Tk, cam.Cam_values):
         Resets the shortcuts to their default values.
         """
         self.load_shortcuts(True)
-        with open("user_shortcuts.json", "w") as FW:
+        with open("sources/user/user_shortcuts.json", "w") as FW:
             FW.write(json.dumps(self.shortcuts_dict, indent=1))
         for shorcut in self.row_list:
             shorcut[2].set(self.shortcuts_dict[shorcut[0].cget("text")])
@@ -790,10 +790,10 @@ class Gui(tk.Tk, cam.Cam_values):
             original (bool): If True, loads from original_shortcuts.json, else from user_shortcuts.json.
         """
         if original:
-            with open("original_shortcuts.json", "r") as FR:
+            with open("sources/libs/original_shortcuts.json", "r") as FR:
                 self.shortcuts_dict = json.load(FR)
         else:
-            with open("user_shortcuts.json", "r") as FR:
+            with open("sources/user/user_shortcuts.json", "r") as FR:
                 self.shortcuts_dict = json.load(FR)
 
     def center_chip(self):
